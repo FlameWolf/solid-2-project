@@ -1,0 +1,1 @@
+export const FONT_SCALE_FACTOR = "font-scale-factor";

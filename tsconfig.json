@@ -1,0 +1,29 @@
+{
+	"compilerOptions": {
+		// General
+		"jsx": "preserve",
+		"jsxImportSource": "@solidjs/web",
+		"lib": ["ESNext", "ESNext.Regexp", "DOM", "DOM.Iterable"],
+		"target": "ESNext",
+		"allowImportingTsExtensions": true,
+		"rewriteRelativeImportExtensions": true,
+		"verbatimModuleSyntax": true,
+		"paths": {
+			"@/*": ["./src/*"]
+		},
+
+		// Modules
+		"allowSyntheticDefaultImports": true,
+		"esModuleInterop": true,
+		"isolatedModules": true,
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"noEmit": true,
+
+		// Type Checking & Safety
+		"strict": true,
+		"skipLibCheck": true,
+		"typeRoots": ["./src/types", "./node_modules/@types"],
+		"types": ["node", "vite/client"]
+	}
+}

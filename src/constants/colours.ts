@@ -1,0 +1,1 @@
+export const colours: Colour[] = ["none", "black", "silver", "grey", "white", "maroon", "red", "purple", "fuchsia", "green", "lime", "olive", "yellow", "navy", "blue", "teal", "aqua"];

@@ -1,0 +1,424 @@
+@import "bootstrap/dist/css/bootstrap.min.css";
+
+:root {
+	--font-scale-factor: 0;
+	--bg-colour-base: var(--bs-body-bg);
+	--editor-text-colour: oklch(from var(--bg-colour-base) round(1.21 - L) 0 0);
+	--editor-highlight-colour: color-mix(in oklab, var(--editor-text-colour) 87.5%, hsl(from var(--bg-colour-base) calc(h + 180) s l));
+	--editor-border-colour: color-mix(in srgb, var(--editor-highlight-colour) 87.5%, var(--bs-border-color));
+}
+
+body {
+	min-width: 12rem;
+	min-height: 100vh;
+}
+
+.container {
+	max-width: unset;
+	padding: unset;
+}
+
+.logo {
+	height: 1.5rem;
+	filter: invert(0.5);
+}
+
+.bi {
+	vertical-align: -0.125rem;
+	max-width: 0.875rem;
+	max-height: 0.875rem;
+}
+
+.dropdown-item:disabled {
+	opacity: 0.5;
+}
+
+.tag-list {
+	background-color: unset;
+	color: unset;
+	z-index: unset;
+
+	.form-control {
+		background-color: color-mix(in srgb, var(--bs-body-bg) 50%, transparent);
+		color: unset;
+	}
+}
+
+.notes-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+	gap: 0.75rem;
+}
+
+.sort-controls {
+	margin-right: auto;
+}
+
+.sort-select {
+	width: auto;
+}
+
+.colour-circle {
+	display: flex;
+	place-items: center;
+	place-content: center;
+	text-decoration: none;
+	width: 2.5rem;
+	height: 2.5rem;
+	border: var(--bs-border-width) var(--bs-border-style) var(--editor-highlight-colour);
+
+	&>svg {
+		transform: scale(2) translateY(2.5%);
+		stroke: currentColor;
+	}
+
+	&.vibgyor {
+		background: linear-gradient(45deg,
+				violet 0 calc(100% / 7),
+				indigo calc(100% / 7) calc(200% / 7),
+				blue calc(200% / 7) calc(300% / 7),
+				green calc(300% / 7) calc(400% / 7),
+				yellow calc(400% / 7) calc(500% / 7),
+				orange calc(500% / 7) calc(600% / 7),
+				red calc(600% / 7));
+		border-color: var(--bs-border-color);
+	}
+
+	&.toolbar-icon {
+		align-self: center;
+		width: 1.75rem;
+		height: 1.75rem;
+
+		&>svg {
+			transform: scale(1.5) translateY(2.5%);
+			filter: drop-shadow(0.5px 0 0 black) drop-shadow(-0.5px 0 0 black) drop-shadow(0 0.5px 0 black) drop-shadow(0 -0.5px 0 black);
+		}
+	}
+}
+
+.bg-none {
+	background: repeating-conic-gradient(#808080 0 25%, #0000 0 50%) 50% / 10px 10px;
+
+	&.note-card {
+		background: transparent;
+	}
+}
+
+.bg-black {
+	--bg-colour-base: black;
+}
+
+.bg-silver {
+	--bg-colour-base: silver;
+}
+
+.bg-grey {
+	--bg-colour-base: grey;
+}
+
+.bg-white {
+	--bg-colour-base: white;
+}
+
+.bg-maroon {
+	--bg-colour-base: maroon;
+}
+
+.bg-red {
+	--bg-colour-base: red;
+}
+
+.bg-purple {
+	--bg-colour-base: purple;
+}
+
+.bg-fuchsia {
+	--bg-colour-base: fuchsia;
+}
+
+.bg-green {
+	--bg-colour-base: green;
+}
+
+.bg-lime {
+	--bg-colour-base: lime;
+}
+
+.bg-olive {
+	--bg-colour-base: olive;
+}
+
+.bg-yellow {
+	--bg-colour-base: yellow;
+}
+
+.bg-navy {
+	--bg-colour-base: navy;
+}
+
+.bg-blue {
+	--bg-colour-base: blue;
+}
+
+.bg-teal {
+	--bg-colour-base: teal;
+}
+
+.bg-aqua {
+	--bg-colour-base: aqua;
+}
+
+.bg-black,
+.bg-silver,
+.bg-grey,
+.bg-white,
+.bg-maroon,
+.bg-red,
+.bg-purple,
+.bg-fuchsia,
+.bg-green,
+.bg-lime,
+.bg-olive,
+.bg-yellow,
+.bg-navy,
+.bg-blue,
+.bg-teal,
+.bg-aqua {
+	--bs-border-color: color-mix(in oklab, var(--editor-text-colour) 87.5%, var(--bs-body-color));
+	--bs-card-border-color: var(--bs-border-color);
+	--current-bg-colour: color-mix(in oklab, var(--bg-colour-base) 75%, black);
+	--current-text-colour: oklch(from var(--current-bg-colour) round(1.21 - L) 0 0);
+	background-color: var(--current-bg-colour);
+	color: color-mix(in oklab, var(--current-text-colour) 87.5%, hsl(from var(--current-bg-colour) calc(h + 180) s l));
+
+	hr {
+		border-color: var(--editor-border-colour);
+		opacity: 0.75;
+	}
+
+	.dropdown-menu {
+		--bs-dropdown-border-color: var(--editor-border-colour);
+		--bs-dropdown-divider-bg: var(--editor-border-colour);
+	}
+
+	button[class*="btn-outline-"] {
+		--bs-btn-border-color: var(--editor-border-colour);
+		--bs-btn-color: var(--editor-highlight-colour);
+	}
+
+	&.card.note-card {
+		--bs-border-color: color-mix(in oklab, var(--editor-border-colour) 87.5%, var(--bg-colour-base));
+		--bs-card-border-color: var(--bs-border-color);
+	}
+}
+
+.ms-n1 {
+	margin-left: -0.25rem !important;
+}
+
+.card.note-card {
+	--bs-border-color: color-mix(in oklab, var(--editor-border-colour) 50%, var(--bg-colour-base));
+	--bs-card-border-color: var(--bs-border-color);
+	height: 12rem;
+}
+
+.note-card {
+	transition: box-shadow 0.15s ease;
+	overflow: hidden;
+
+	&>.card-body {
+		&>.card-text {
+			color: color-mix(in oklab, currentColor 80%, transparent);
+		}
+
+		.badge {
+			color: unset;
+		}
+	}
+
+	&>.bg-body {
+		--bs-bg-opacity: 0.875;
+	}
+}
+
+.note-card:hover {
+	filter: drop-shadow(0 0 0.75rem var(--bs-body-color));
+}
+
+.new-note-card {
+	border-style: dashed;
+	opacity: 0.7;
+}
+
+.new-note-card:hover {
+	opacity: 1;
+}
+
+.note-card.selected {
+	border-color: var(--bs-primary);
+}
+
+.status-badge {
+	background-color: rgb(from var(--bs-body-bg) r g b / 0.75);
+	color: var(--bs-body-color);
+	border-bottom-right-radius: 0.5rem;
+}
+
+.selection-checkbox {
+	position: absolute;
+	top: 0.5rem;
+	right: 0.5rem;
+	width: 1.25rem;
+	height: 1.25rem;
+	cursor: pointer;
+	pointer-events: none;
+}
+
+.edit-note {
+	margin: 0 -0.25rem;
+}
+
+.edit-note .form-control,
+.edit-note .form-control-lg {
+	--bs-secondary-color: color-mix(in oklab, var(--current-bg-colour, grey) 50%, var(--editor-text-colour, transparent));
+	background-color: color-mix(in oklab, var(--current-bg-colour) 87.5%, hsl(from var(--editor-text-colour) calc(h + 180) s l));
+	color: var(--editor-text-colour);
+	padding: 0.5rem;
+	border: none;
+
+	/*! purgecss start ignore */
+	&:focus {
+		background-color: var(--current-bg-colour);
+	}
+
+	/*! purgecss end ignore */
+}
+
+.note-title,
+.note-content {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.note-content,
+.note-textarea {
+	font-size: calc(1rem + var(--font-scale-factor) * 1pt);
+}
+
+.note-content {
+	line-height: 1.7;
+}
+
+.note-textarea {
+	line-height: 1.7;
+	field-sizing: content;
+	resize: vertical;
+}
+
+textarea.form-control {
+	min-height: 18.75rem;
+}
+
+.d-hidden {
+	visibility: hidden;
+	position: absolute;
+	pointer-events: none;
+}
+
+.selection-action-bar {
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	padding: 0.75rem 1rem;
+	padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0));
+	background-color: var(--bs-body-bg);
+	border-top: 1pt solid var(--bs-border-color);
+	filter: drop-shadow(0 0 0.5rem var(--bs-body-color));
+}
+
+.legal-content {
+	overflow-wrap: break-word;
+	max-width: 48rem;
+}
+
+.legal-content :is(h3) {
+	font-weight: 600;
+}
+
+.notification-list {
+	max-width: 75vw;
+	max-height: 50vh;
+	overflow: hidden;
+	transform-origin: right bottom;
+	transform: scale(0.9);
+
+	&>.alert {
+		word-break: break-word;
+	}
+}
+
+.nav-overlay {
+	position: fixed;
+	inset: 0;
+	width: 100vw;
+	height: 100vh;
+	cursor: wait;
+}
+
+.confirm-overlay {
+	position: fixed;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 1rem;
+	background-color: color-mix(in srgb, var(--bs-body-color) 50%, transparent);
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.15s ease;
+}
+
+.confirm-overlay[data-visible="true"] {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+.confirm-dialog {
+	background-color: var(--bs-body-bg);
+	color: var(--bs-body-color);
+	border-radius: 0.75rem;
+	padding: 1.25rem;
+	width: 100%;
+	max-width: 28rem;
+	filter: drop-shadow(0 0 0.75rem var(--bs-body-color));
+	transform: scale(0.96);
+	transition: transform 0.15s ease;
+}
+
+.confirm-overlay[data-visible="true"] .confirm-dialog {
+	transform: scale(1);
+}
+
+.confirm-title {
+	margin: 0 0 0.75rem 0;
+	font-weight: 600;
+}
+
+.confirm-message {
+	margin: 0 0 1.25rem 0;
+	color: var(--bs-secondary-color);
+	white-space: pre-wrap;
+}
+
+.confirm-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 0.5rem;
+	flex-wrap: wrap;
+}

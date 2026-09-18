@@ -1,0 +1,24 @@
+{
+	"name": "QuickPad",
+	"short_name": "QuickPad",
+	"description": "A simple, fast note-taking app that works offline.",
+	"start_url": "/",
+	"scope": "/",
+	"id": "/",
+	"display": "standalone",
+	"display_override": ["standalone", "minimal-ui", "browser"],
+	"orientation": "any",
+	"background_color": "#0E1C2A",
+	"theme_color": "#0E1C2A",
+	"lang": "en",
+	"dir": "ltr",
+	"categories": ["productivity", "utilities"],
+	"icons": [
+		{
+			"src": "/favicon.svg",
+			"type": "image/svg+xml",
+			"sizes": "any",
+			"purpose": "any maskable"
+		}
+	]
+}

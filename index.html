@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+		<meta name="description" content="A simple, fast note-taking app that works offline."/>
+		<meta name="theme-color" content="#0E1C2A"/>
+		<meta name="application-name" content="QuickPad"/>
+		<meta name="apple-mobile-web-app-capable" content="yes"/>
+		<meta name="mobile-web-app-capable" content="yes"/>
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+		<meta name="apple-mobile-web-app-title" content="QuickPad"/>
+		<link rel="icon" href="/favicon.svg"/>
+		<link rel="apple-touch-icon" href="/favicon.svg"/>
+		<link rel="manifest" href="/manifest.webmanifest"/>
+		<link rel="dns-prefetch" href="https://accounts.google.com" crossorigin/>
+		<style>
+			html,
+			body {
+				margin: 0;
+				background: #0e1c2a;
+				color: #f5f5f5;
+				font-family:
+					system-ui,
+					-apple-system,
+					sans-serif;
+			}
+			#app {
+				min-height: 100vh;
+			}
+		</style>
+		<script async defer src="https://accounts.google.com/gsi/client"></script>
+		<title>QuickPad</title>
+	</head>
+	<body>
+		<div id="app" class="d-flex flex-column"></div>
+		<script type="module" src="/src/index.tsx"></script>
+	</body>
+</html>
