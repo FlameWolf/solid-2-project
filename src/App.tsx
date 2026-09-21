@@ -1,8 +1,7 @@
 import "./App.css";
 import { getOwner, onSettled, Show } from "solid-js";
-import { invoke } from "@/utils/common";
 import { currentColour } from "@/stores/app";
-import { isLoading, hydrateNotes } from "@/stores/notes";
+import { isLoading } from "@/stores/notes";
 import { RouteTransition } from "@/router";
 import { setAppOwner } from "@/composables/useAppOwner";
 import { purgeStaleDrafts } from "@/composables/useNoteDraft";
@@ -25,10 +24,7 @@ export default function App(props: AppProps) {
 	setAppOwner(getOwner());
 
 	onSettled(() => {
-		invoke(async () => {
-			await hydrateNotes();
-			purgeStaleDrafts();
-		});
+		purgeStaleDrafts();
 	});
 
 	return (

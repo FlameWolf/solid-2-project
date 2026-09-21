@@ -21,17 +21,29 @@ interface NotesState {
 	isSearching: boolean;
 }
 
-let hydrated = false;
-const [store, setStore] = createStore<NotesState>({
-	notes: [],
-	tags: [],
-	searchText: emptyString,
-	searchColours: new Set<string>(),
-	searchTags: new Set<string>(),
-	tagFilter: "any",
-	isLoading: true,
-	isSearching: false
-});
+const [store, setStore] = createStore<NotesState>(
+	async draft => {
+		try {
+			draft.notes = await notesRepository.loadAll();
+			draft.tags = await tagsRepository.loadAll();
+		} catch (err) {
+			console.error("Failed to load notes from storage", err);
+		} finally {
+			draft.isLoading = false;
+		}
+	},
+	{
+		notes: [],
+		tags: [],
+		searchText: emptyString,
+		searchColours: new Set<string>(),
+		searchTags: new Set<string>(),
+		tagFilter: "any",
+		isLoading: true,
+		isSearching: false
+	},
+	{ seedLoadingValue: true }
+);
 const [contentMatchedIds, setContentMatchedIds] = createSignal(new Set<UUID>());
 export const notes = () => store.notes;
 export const tags = () => store.tags;
@@ -72,38 +84,6 @@ export const activeNotes = createMemo(() => searchResults().filter(note => !note
 export const favedNotes = createMemo(() => searchResults().filter(note => note.favedAt && !note.deletedAt), { sync: true });
 export const archivedNotes = createMemo(() => searchResults().filter(note => note.archivedAt && !note.deletedAt), { sync: true });
 export const trashedNotes = createMemo(() => searchResults().filter(note => note.deletedAt), { sync: true });
-
-export async function hydrateNotes(): Promise<void> {
-	if (hydrated) {
-		return;
-	}
-	hydrated = true;
-	try {
-		const notes = await notesRepository.loadAll();
-		const tags = await tagsRepository.loadAll();
-		setStore(draft => {
-			draft.notes = notes;
-			draft.tags = mergeArrays(
-				draft.notes.reduce((tags, note) => {
-					if (note.tags) {
-						return tags.concat(note.tags);
-					}
-					return tags;
-				}, [] as string[]),
-				tags
-			);
-		});
-	} catch (err) {
-		setStore(draft => {
-			draft.notes = [];
-		});
-		console.error("Failed to load notes from storage", err);
-	} finally {
-		setStore(draft => {
-			draft.isLoading = false;
-		});
-	}
-}
 
 export function setSearchText(query: string) {
 	const trimmed = query.trim();
@@ -365,7 +345,7 @@ export async function purgeExpiredTrash() {
 function addOrUpdate(updatedNote: Note) {
 	setStore(draft => {
 		const index = draft.notes.findIndex(note => note.id === updatedNote.id);
-		switch(index) {
+		switch (index) {
 			case -1: {
 				draft.notes = draft.notes.concat(updatedNote);
 				break;
@@ -400,7 +380,7 @@ export async function createTag(tag: string) {
 
 export async function createTags(tags: string[]) {
 	setStore(draft => {
-		draft.tags =  mergeArrays(draft.tags, tags);
+		draft.tags = mergeArrays(draft.tags, tags);
 	});
 	await tagsRepository.saveMany(tags);
 }
