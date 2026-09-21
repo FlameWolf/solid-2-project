@@ -21,9 +21,8 @@ interface AppProps {
 }
 
 export default function App(props: AppProps) {
-	setAppOwner(getOwner());
-
 	onSettled(() => {
+		setAppOwner(getOwner());
 		purgeStaleDrafts();
 	});
 

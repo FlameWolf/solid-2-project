@@ -13,52 +13,24 @@ interface SortState {
 	sortOrder: SortOrder;
 }
 
-let hydrated = false;
-const [state, setState] = createStore<SortState>({
-	sortField: "modifiedAt",
-	sortOrder: "desc"
-});
+const [state, setState] = createStore<SortState>(
+	async draft => {
+		const storedBy = await getKV(SORT_BY_KEY);
+		if (SORT_FIELDS.includes(storedBy as SortField)) {
+			draft.sortField = storedBy as SortField;
+		}
+		const storedDir = await getKV(SORT_DIRECTION_KEY);
+		if (SORT_DIRECTIONS.includes(storedDir as SortOrder)) {
+			draft.sortOrder = storedDir as SortOrder;
+		}
+	},
+	{
+		sortField: "modifiedAt",
+		sortOrder: "desc"
+	}
+);
 export const sortField = createMemo(() => state.sortField, { sync: true });
 export const sortOrder = createMemo(() => state.sortOrder, { sync: true });
-
-export async function hydrateSortPrefs(): Promise<void> {
-	if (hydrated) {
-		return;
-	}
-	hydrated = true;
-	const storedBy = await getKV(SORT_BY_KEY);
-	if (SORT_FIELDS.includes(storedBy as SortField)) {
-		setState(draft => {
-			draft.sortField = storedBy as SortField;
-		});
-	}
-	const storedDir = await getKV(SORT_DIRECTION_KEY);
-	if (SORT_DIRECTIONS.includes(storedDir as SortOrder)) {
-		setState(draft => {
-			draft.sortOrder = storedDir as SortOrder;
-		});
-	}
-	runWithOwner(getAppOwner(), () => {
-		createEffect(
-			() => state.sortField,
-			field => {
-				invoke(async () => {
-					await setKV(SORT_BY_KEY, field);
-				});
-			},
-			{ defer: true }
-		);
-		createEffect(
-			() => state.sortOrder,
-			order => {
-				invoke(async () => {
-					await setKV(SORT_DIRECTION_KEY, order);
-				});
-			},
-			{ defer: true }
-		);
-	});
-}
 
 function getColourValue(name: string | undefined): number {
 	if (!name) {
@@ -123,3 +95,24 @@ export function getSortedNotes(notes: ReadonlyArray<Note>): Note[] {
 		return compareNotes(a, b, state.sortField) * multiplier;
 	});
 }
+
+runWithOwner(getAppOwner(), () => {
+	createEffect(
+		() => state.sortField,
+		field => {
+			invoke(async () => {
+				await setKV(SORT_BY_KEY, field);
+			});
+		},
+		{ defer: true }
+	);
+	createEffect(
+		() => state.sortOrder,
+		order => {
+			invoke(async () => {
+				await setKV(SORT_DIRECTION_KEY, order);
+			});
+		},
+		{ defer: true }
+	);
+});

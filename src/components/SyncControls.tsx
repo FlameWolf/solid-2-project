@@ -3,11 +3,10 @@ import { invoke } from "@/utils/common";
 import { isLoading, purgeExpiredTrash } from "@/stores/notes";
 import { confirm } from "@/composables/useConfirmDialogue";
 import { useDropdown } from "@/composables/useDropdown";
-import { hydrateAuthState, isConfigured, isReady, isSignedIn, signIn, signOut, tryRestoreSession, user } from "@/composables/useGoogleAuth";
-import { autoSyncEnabled, doPullAndPush, hydrateSyncMetadata, isSyncing, lastSyncedAt, requestSync, setAutoSync, syncError } from "@/composables/useNotesSync";
+import { isConfigured, isReady, isSignedIn, signIn, signOut, tryRestoreSession, user } from "@/composables/useGoogleAuth";
+import { autoSyncEnabled, doPullAndPush, isSyncing, lastSyncedAt, requestSync, setAutoSync, syncError } from "@/composables/useNotesSync";
 import Spinner from "@/components/Spinner";
 import Icon from "@/components/Icon";
-
 
 export default function SyncControls() {
 	let readyTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -99,11 +98,7 @@ export default function SyncControls() {
 				}
 			}, 6000);
 		}
-		invoke(async () => {
-			await hydrateSyncMetadata();
-			await hydrateAuthState();
-			tryRestoreSession();
-		});
+		tryRestoreSession();
 	});
 
 	onCleanup(() => {

@@ -29,14 +29,25 @@ enum NoteChangeOrigin {
 	Neither = "neither"
 }
 
-let hydrated = false;
-const [state, setState] = createStore<SyncState>({
-	isSyncing: false,
-	autoSyncEnabled: true,
-	syncError: null
+const [state, setState] = createStore<SyncState>(
+	async draft => {
+		const storedAutoSync = await getKV(AUTO_SYNC_KEY);
+		draft.autoSyncEnabled = storedAutoSync === undefined ? true : storedAutoSync;
+	},
+	{
+		isSyncing: false,
+		autoSyncEnabled: true,
+		syncError: null
+	}
+);
+const [lastSyncedToLocalAt, setLastSyncedToLocalAt] = createSignal(async () => {
+	const storedLocal = await getKV(LAST_SYNCED_TO_LOCAL_KEY);
+	return storedLocal ? new Date(storedLocal) : null;
 });
-const [lastSyncedToLocalAt, setLastSyncedToLocalAt] = createSignal<Date | null>(null);
-const [lastSyncedToCloudAt, setLastSyncedToCloudAt] = createSignal<Date | null>(null);
+const [lastSyncedToCloudAt, setLastSyncedToCloudAt] = createSignal(async () => {
+	const storedCloud = await getKV(LAST_SYNCED_TO_CLOUD_KEY);
+	return storedCloud ? new Date(storedCloud) : null;
+});
 const pendingPurges = new Set<UUID>();
 const debouncedFlush = debounce(() => {
 	if (isSignedIn() && state.autoSyncEnabled) {
@@ -72,58 +83,6 @@ export const requestSync = Object.assign(
 		}
 	}
 );
-
-export async function hydrateSyncMetadata(): Promise<void> {
-	if (hydrated) {
-		return;
-	}
-	hydrated = true;
-	const storedLocal = await getKV(LAST_SYNCED_TO_LOCAL_KEY);
-	const storedCloud = await getKV(LAST_SYNCED_TO_CLOUD_KEY);
-	const storedAutoSync = await getKV(AUTO_SYNC_KEY);
-	setLastSyncedToLocalAt(storedLocal ? new Date(storedLocal) : null);
-	setLastSyncedToCloudAt(storedCloud ? new Date(storedCloud) : null);
-	setState(draft => {
-		draft.autoSyncEnabled = storedAutoSync === undefined ? true : storedAutoSync;
-	});
-	runWithOwner(getAppOwner(), () => {
-		createEffect(
-			lastSyncedToLocalAt,
-			date => {
-				invoke(async () => {
-					if (date) {
-						await setKV(LAST_SYNCED_TO_LOCAL_KEY, date.toISOString());
-					} else {
-						await deleteKV(LAST_SYNCED_TO_LOCAL_KEY);
-					}
-				});
-			},
-			{ defer: true }
-		);
-		createEffect(
-			lastSyncedToCloudAt,
-			date => {
-				invoke(async () => {
-					if (date) {
-						await setKV(LAST_SYNCED_TO_CLOUD_KEY, date.toISOString());
-					} else {
-						await deleteKV(LAST_SYNCED_TO_CLOUD_KEY);
-					}
-				});
-			},
-			{ defer: true }
-		);
-		createEffect(
-			() => state.autoSyncEnabled,
-			flag => {
-				invoke(async () => {
-					await setKV(AUTO_SYNC_KEY, flag);
-				});
-			},
-			{ defer: true }
-		);
-	});
-}
 
 function getFileName(id: UUID) {
 	return `${NOTE_PREFIX}${id}.json`;
@@ -299,8 +258,48 @@ export async function doPullAndPush({ force = false as boolean, purged = [] as R
 }
 
 export async function setAutoSync(enabled: boolean) {
-	// setState("autoSyncEnabled", enabled);
+	setState(draft => {
+		draft.autoSyncEnabled = enabled;
+	});
 	if (!enabled) {
 		requestSync.cancel();
 	}
 }
+
+runWithOwner(getAppOwner(), () => {
+	createEffect(
+		lastSyncedToLocalAt,
+		date => {
+			invoke(async () => {
+				if (date) {
+					await setKV(LAST_SYNCED_TO_LOCAL_KEY, date.toISOString());
+				} else {
+					await deleteKV(LAST_SYNCED_TO_LOCAL_KEY);
+				}
+			});
+		},
+		{ defer: true }
+	);
+	createEffect(
+		lastSyncedToCloudAt,
+		date => {
+			invoke(async () => {
+				if (date) {
+					await setKV(LAST_SYNCED_TO_CLOUD_KEY, date.toISOString());
+				} else {
+					await deleteKV(LAST_SYNCED_TO_CLOUD_KEY);
+				}
+			});
+		},
+		{ defer: true }
+	);
+	createEffect(
+		() => state.autoSyncEnabled,
+		flag => {
+			invoke(async () => {
+				await setKV(AUTO_SYNC_KEY, flag);
+			});
+		},
+		{ defer: true }
+	);
+});

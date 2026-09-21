@@ -15,71 +15,33 @@ interface AuthState {
 	user: UserInfo | null;
 }
 
-let hydrated = false;
 let cachedToken: string | null = null;
 let cachedExpiry: number = 0;
 let cachedUser: UserInfo | null = null;
 let refreshInFlight: Promise<string> | null = null;
-const [state, setState] = createStore<AuthState>({
-	isReady: false,
-	isSignedIn: false,
-	user: null
-});
+const [state, setState] = createStore<AuthState>(
+	async draft => {
+		cachedToken = (await getKV(TOKEN_KEY)) ?? null;
+		cachedExpiry = (await getKV(EXPIRY_KEY)) ?? 0;
+		const stored = await getKV(USER_KEY);
+		if (stored && typeof stored.email === "string" && typeof stored.name === "string") {
+			cachedUser = { email: stored.email, name: stored.name };
+		} else {
+			cachedUser = null;
+		}
+	},
+	{
+		isReady: false,
+		isSignedIn: false,
+		user: null
+	}
+);
 const [accessToken, setAccessToken] = createSignal<string | null>(null);
 const [tokenExpiresAt, setTokenExpiresAt] = createSignal(0);
 export const isConfigured = !!CLIENT_ID;
 export const isReady = createMemo(() => state.isReady, { sync: true });
 export const isSignedIn = createMemo(() => state.isSignedIn, { sync: true });
 export const user = createMemo(() => state.user, { sync: true });
-
-export async function hydrateAuthState(): Promise<void> {
-	if (hydrated) {
-		return;
-	}
-	hydrated = true;
-	cachedToken = (await getKV(TOKEN_KEY)) ?? null;
-	cachedExpiry = (await getKV(EXPIRY_KEY)) ?? 0;
-	const stored = await getKV(USER_KEY);
-	if (stored && typeof stored.email === "string" && typeof stored.name === "string") {
-		cachedUser = { email: stored.email, name: stored.name };
-	} else {
-		cachedUser = null;
-	}
-	runWithOwner(getAppOwner(), () => {
-		createEffect(
-			() => ({ token: accessToken(), expiresAt: tokenExpiresAt() }),
-			({ token, expiresAt }) => {
-				invoke(async () => {
-					if (!token || !expiresAt) {
-						await deleteKV(TOKEN_KEY);
-						await deleteKV(EXPIRY_KEY);
-						return;
-					}
-					if (token !== cachedToken || expiresAt !== cachedExpiry) {
-						await setKV(TOKEN_KEY, token);
-						await setKV(EXPIRY_KEY, expiresAt);
-					}
-				});
-			},
-			{ defer: true }
-		);
-		createEffect(
-			() => state.user,
-			info => {
-				invoke(async () => {
-					if (!info) {
-						await deleteKV(USER_KEY);
-						return;
-					}
-					if (info && (info.email !== cachedUser?.email || info.name !== cachedUser?.name)) {
-						await setKV(USER_KEY, snapshot(info));
-					}
-				});
-			},
-			{ defer: true }
-		);
-	});
-}
 
 async function clearSession(keepUser = false) {
 	setAccessToken(null);
@@ -243,3 +205,38 @@ export async function signOut() {
 	}
 	await clearSession();
 }
+
+runWithOwner(getAppOwner(), () => {
+	createEffect(
+		() => ({ token: accessToken(), expiresAt: tokenExpiresAt() }),
+		({ token, expiresAt }) => {
+			invoke(async () => {
+				if (!token || !expiresAt) {
+					await deleteKV(TOKEN_KEY);
+					await deleteKV(EXPIRY_KEY);
+					return;
+				}
+				if (token !== cachedToken || expiresAt !== cachedExpiry) {
+					await setKV(TOKEN_KEY, token);
+					await setKV(EXPIRY_KEY, expiresAt);
+				}
+			});
+		},
+		{ defer: true }
+	);
+	createEffect(
+		() => state.user,
+		info => {
+			invoke(async () => {
+				if (!info) {
+					await deleteKV(USER_KEY);
+					return;
+				}
+				if (info && (info.email !== cachedUser?.email || info.name !== cachedUser?.name)) {
+					await setKV(USER_KEY, snapshot(info));
+				}
+			});
+		},
+		{ defer: true }
+	);
+});
