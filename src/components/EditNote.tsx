@@ -45,29 +45,32 @@ export default function EditNote(props: Props) {
 	const dropdown = useDropdown(dropdownToggle);
 	const titleInputRef = useTruncate(editTitle, setEditTitle, 1024);
 	const undoRedo = useUndoRedo<string>(editContent());
-	const sentenceCount = createMemo(() => (isEditing() ? getSentenceCount(editContent()) : (existingNote()?.sentenceCount ?? 0)));
-	const wordCount = createMemo(() => (isEditing() ? getWordCount(editContent()) : (existingNote()?.wordCount ?? 0)));
-	const characterCount = createMemo(() => (isEditing() ? getCharacterCount(editContent()) : (existingNote()?.characterCount ?? 0)));
-	const hasContent = createMemo(() => !!sentenceCount() || !!wordCount() || !!characterCount());
-	const isFaved = createMemo(() => !!existingNote()?.favedAt && !existingNote()?.deletedAt);
-	const isPinned = createMemo(() => !!existingNote()?.pinnedAt && !existingNote()?.deletedAt);
-	const isArchived = createMemo(() => !!existingNote()?.archivedAt && !existingNote()?.deletedAt);
-	const isTrashed = createMemo(() => !!existingNote()?.deletedAt);
-	const backRoute = createMemo(() => props.backRoute ?? "/notes");
-	const hasUnsavedChanges = createMemo(() => {
-		if (!isEditing()) {
-			return false;
-		}
-		if (isCreateMode()) {
-			return editTitle().trim().length > 0 || editContent().length > 0 || !areSetsEqual(new Set(editTags()), notesStore.searchTags());
-		}
-		const note = existingNote();
-		if (!note) {
-			return false;
-		}
-		return editTitle() !== note.title || editContent() !== loadedContent() || editColour() !== note.colour || !areArraysEqual(editTags(), note.tags);
-	});
-	const draftId = createMemo(() => (isCreateMode() ? "new" : params.id!));
+	const sentenceCount = createMemo(() => (isEditing() ? getSentenceCount(editContent()) : (existingNote()?.sentenceCount ?? 0)), { sync: true });
+	const wordCount = createMemo(() => (isEditing() ? getWordCount(editContent()) : (existingNote()?.wordCount ?? 0)), { sync: true });
+	const characterCount = createMemo(() => (isEditing() ? getCharacterCount(editContent()) : (existingNote()?.characterCount ?? 0)), { sync: true });
+	const hasContent = createMemo(() => !!sentenceCount() || !!wordCount() || !!characterCount(), { sync: true });
+	const isFaved = createMemo(() => !!existingNote()?.favedAt && !existingNote()?.deletedAt, { sync: true });
+	const isPinned = createMemo(() => !!existingNote()?.pinnedAt && !existingNote()?.deletedAt, { sync: true });
+	const isArchived = createMemo(() => !!existingNote()?.archivedAt && !existingNote()?.deletedAt, { sync: true });
+	const isTrashed = createMemo(() => !!existingNote()?.deletedAt, { sync: true });
+	const backRoute = createMemo(() => props.backRoute ?? "/notes", { sync: true });
+	const hasUnsavedChanges = createMemo(
+		() => {
+			if (!isEditing()) {
+				return false;
+			}
+			if (isCreateMode()) {
+				return editTitle().trim().length > 0 || editContent().length > 0 || !areSetsEqual(new Set(editTags()), notesStore.searchTags());
+			}
+			const note = existingNote();
+			if (!note) {
+				return false;
+			}
+			return editTitle() !== note.title || editContent() !== loadedContent() || editColour() !== note.colour || !areArraysEqual(editTags(), note.tags);
+		},
+		{ sync: true }
+	);
+	const draftId = createMemo(() => (isCreateMode() ? "new" : params.id!), { sync: true });
 	const debouncedPushUndo = debounce((value: string) => undoRedo.push(value), 300);
 	const persistDraft = debounce(() => {
 		if (hasUnsavedChanges()) {

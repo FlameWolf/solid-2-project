@@ -9,7 +9,7 @@ type Props = {
 };
 
 export default function Spinner(props: Props) {
-	const showMessage = createMemo(() => props.showMessage ?? true);
+	const showMessage = createMemo(() => props.showMessage ?? true, { sync: true });
 	const [wrapperElem] = createStore({ value: dynamic(() => props.tag ?? "div") });
 
 	return (

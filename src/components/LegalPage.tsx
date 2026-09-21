@@ -9,7 +9,7 @@ interface Props {
 }
 
 export default function LegalPage(props: Props) {
-	const introParagraphs = createMemo(() => props.intro.split("\n\n"));
+	const introParagraphs = createMemo(() => props.intro.split("\n\n"), { sync: true });
 
 	return (
 		<>

@@ -20,10 +20,10 @@ function formatDate(date?: Date): string {
 }
 
 export default function NoteCard(props: Props) {
-	const note = createMemo(() => props.note);
-	const colourClass = createMemo(() => note().colour ? { [`bg-${note().colour}`]: true } : {});
-	const isSelectionMode = createMemo(() => props.selectionMode);
-	const isSelected = createMemo(() => props.selected);
+	const note = createMemo(() => props.note, { sync: true });
+	const colourClass = createMemo(() => (note().colour ? { [`bg-${note().colour}`]: true } : {}), { sync: true });
+	const isSelectionMode = createMemo(() => props.selectionMode, { sync: true });
+	const isSelected = createMemo(() => props.selected, { sync: true });
 
 	function addToSearchTags(tag: string) {
 		if (props.selectionMode) {

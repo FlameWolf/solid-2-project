@@ -11,7 +11,7 @@ interface Props {
 }
 
 export default function SortControls(props: Props) {
-	const isAscending = createMemo(() => props.sortOrder === "asc");
+	const isAscending = createMemo(() => props.sortOrder === "asc", { sync: true });
 
 	onSettled(() => {
 		invoke(async () => {

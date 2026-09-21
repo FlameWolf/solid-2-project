@@ -3,7 +3,7 @@ import { activeTheme, applyTheme, Theme, toggleTheme } from "@/composables/useTh
 import Icon from "@/components/Icon";
 
 export default function ThemeToggle() {
-	const isDark = createMemo(() => activeTheme() === Theme.Dark);
+	const isDark = createMemo(() => activeTheme() === Theme.Dark, { sync: true });
 
 	onSettled(() => {
 		applyTheme(activeTheme());

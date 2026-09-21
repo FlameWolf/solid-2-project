@@ -8,7 +8,7 @@ import { listViewRoutes } from "@/router";
 export default function SearchBar() {
 	let searchInput!: HTMLInputElement;
 	const location = useLocation();
-	const isSearchMode = createMemo(() => !!notesStore.searchText());
+	const isSearchMode = createMemo(() => !!notesStore.searchText(), { sync: true });
 	const debouncedSearch = debounce(() => {
 		notesStore.setSearchText(searchInput.value?.trim() ?? emptyString);
 	}, 300);

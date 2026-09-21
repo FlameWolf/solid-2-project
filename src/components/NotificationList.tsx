@@ -2,7 +2,7 @@ import { createMemo, For } from "solid-js";
 import { notifications, removeNotification } from "@/stores/notifications";
 
 export default function NotificationList() {
-	const sortedNotifications = createMemo(() => notifications().toSorted((a, b) => b.timeStamp - a.timeStamp));
+	const sortedNotifications = createMemo(() => notifications().toSorted((a, b) => b.timeStamp - a.timeStamp), { sync: true });
 
 	return (
 		<div class="d-flex flex-column gap-2 notification-list position-fixed end-0 bottom-0 me-2 mb-2">

@@ -38,96 +38,111 @@ export default function DisplayNoteList(props: Props) {
 		autoClose: false,
 		dropdown: dropdownMenu
 	});
-	const view = createMemo<View>(() => props.view ?? "active");
-	const isSearchMode = createMemo(() => !!notesStore.searchText());
-	const sourceNotes = createMemo<Note[]>(() => {
-		switch (view()) {
-			case "favourited":
-				return notesStore.favedNotes();
-			case "archived":
-				return notesStore.archivedNotes();
-			case "trash":
-				return notesStore.trashedNotes();
-			default:
-				return notesStore.activeNotes();
-		}
-	});
-	const sortedNotes = createMemo(() => getSortedNotes(sourceNotes()));
-	const noteSections = createMemo(() => {
-		if (view() === "favourited") {
-			const sections: NoteSection[] = [
+	const view = createMemo<View>(() => props.view ?? "active", { sync: true });
+	const isSearchMode = createMemo(() => !!notesStore.searchText(), { sync: true });
+	const sourceNotes = createMemo<Note[]>(
+		() => {
+			switch (view()) {
+				case "favourited":
+					return notesStore.favedNotes();
+				case "archived":
+					return notesStore.archivedNotes();
+				case "trash":
+					return notesStore.trashedNotes();
+				default:
+					return notesStore.activeNotes();
+			}
+		},
+		{ sync: true }
+	);
+	const sortedNotes = createMemo(() => getSortedNotes(sourceNotes()), { sync: true });
+	const noteSections = createMemo(
+		() => {
+			if (view() === "favourited") {
+				const sections: NoteSection[] = [
+					{
+						key: "active",
+						notes: sortedNotes().filter(n => !n.archivedAt)
+					}
+				];
+				const archived = sortedNotes().filter(n => n.archivedAt);
+				if (archived.length) {
+					sections.push({
+						key: "archived",
+						notes: archived,
+						divider: "ARCHIVE"
+					});
+				}
+				return sections;
+			}
+			return [
 				{
-					key: "active",
-					notes: sortedNotes().filter(n => !n.archivedAt)
+					key: "all",
+					notes: sortedNotes(),
+					showNewCard: view() === "active"
 				}
 			];
-			const archived = sortedNotes().filter(n => n.archivedAt);
-			if (archived.length) {
-				sections.push({
-					key: "archived",
-					notes: archived,
-					divider: "ARCHIVE"
-				});
+		},
+		{ sync: true }
+	);
+	const hasNotes = createMemo(() => sourceNotes().length > 0, { sync: true });
+	const allSelected = createMemo(() => sourceNotes().length > 0 && selectedCount() === sourceNotes().length, { sync: true });
+	const selectAllText = createMemo(() => (allSelected() ? "Deselect All" : "Select All"), { sync: true });
+	const pageTitle = createMemo(
+		() => {
+			switch (view()) {
+				case "favourited":
+					return "Favourited";
+				case "archived":
+					return "Archived";
+				case "trash":
+					return "Trash";
+				default:
+					return "Notes";
 			}
-			return sections;
-		}
-		return [
-			{
-				key: "all",
-				notes: sortedNotes(),
-				showNewCard: view() === "active"
+		},
+		{ sync: true }
+	);
+	const emptyMessage = createMemo(
+		() => {
+			switch (view()) {
+				case "favourited":
+					return "No favourited notes";
+				case "archived":
+					return "No archived notes";
+				case "trash":
+					return "Trash is empty";
+				default:
+					return "No notes yet";
 			}
-		];
-	});
-	const hasNotes = createMemo(() => sourceNotes().length > 0);
-	const allSelected = createMemo(() => sourceNotes().length > 0 && selectedCount() === sourceNotes().length);
-	const selectAllText = createMemo(() => allSelected() ? "Deselect All" : "Select All");
-	const pageTitle = createMemo(() => {
-		switch (view()) {
-			case "favourited":
-				return "Favourited";
-			case "archived":
-				return "Archived";
-			case "trash":
-				return "Trash";
-			default:
-				return "Notes";
-		}
-	});
-	const emptyMessage = createMemo(() => {
-		switch (view()) {
-			case "favourited":
-				return "No favourited notes";
-			case "archived":
-				return "No archived notes";
-			case "trash":
-				return "Trash is empty";
-			default:
-				return "No notes yet";
-		}
-	});
-	const selectionActions = createMemo<SelectionAction[]>(() => {
-		if (view() === "trash") {
-			return bulkActions.filter(action => action.key === "restore" || action.key === "permanent");
-		}
-		const actionKeys = new Set<SelectionAction["key"]>(["export", "trash"]);
-		switch (view()) {
-			case "favourited": {
-				actionKeys.add("unfave");
-				break;
+		},
+		{ sync: true }
+	);
+	const selectionActions = createMemo<SelectionAction[]>(
+		() => {
+			if (view() === "trash") {
+				return bulkActions.filter(action => action.key === "restore" || action.key === "permanent");
 			}
-			case "archived": {
-				actionKeys.add("unarchive");
-				break;
+			const actionKeys = new Set<SelectionAction["key"]>(["export", "trash"]);
+			switch (view()) {
+				case "favourited": {
+					actionKeys.add("unfave");
+					break;
+				}
+				case "archived": {
+					actionKeys.add("unarchive");
+					break;
+				}
+				default: {
+					actionKeys.add("fave");
+					actionKeys.add("archive");
+					break;
+				}
 			}
-			default: {
-				actionKeys.add("fave");
-				actionKeys.add("archive");
-				break;
-			}
-		}
-		return bulkActions.filter(action => actionKeys.has(action.key));
-	});
+			return bulkActions.filter(action => actionKeys.has(action.key));
+		},
+		{ sync: true }
+	);
 
 	function onSortFieldChange(e: Event) {
 		setSortField((e.target as HTMLSelectElement).value as SortField);

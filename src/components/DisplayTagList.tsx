@@ -38,14 +38,17 @@ export default function DisplayTagList(props: Props) {
 		dropdown: dropdownMenu
 	});
 	const searchInputRef = useTruncate(searchText, setSearchText, 256);
-	const flexModifiers = createMemo(() => ({
-		[dropdown.show() ? "flex-column" : "flex-wrap"]: true
-	}));
-	const filteredTags = createMemo(() => sort(!searchText() ? notesStore.tags() : notesStore.tags().filter(tag => contains(tag, searchText()))));
-	const allSelected = createMemo(() => filteredTags().every(tag => selectedTags().includes(tag)));
-	const hasExactMatch = createMemo(() => !searchText() || notesStore.tags().some(tag => equals(tag, normaliseTag(searchText()))));
-	const enableActions = createMemo(() => !!(selectedCount() && selectedTags().length));
-	const [wrapperElem] = createStore({ value: dynamic(() => props.allowEdit ? "div" : "a") });
+	const flexModifiers = createMemo(
+		() => ({
+			[dropdown.show() ? "flex-column" : "flex-wrap"]: true
+		}),
+		{ sync: true }
+	);
+	const filteredTags = createMemo(() => sort(!searchText() ? notesStore.tags() : notesStore.tags().filter(tag => contains(tag, searchText()))), { sync: true });
+	const allSelected = createMemo(() => filteredTags().every(tag => selectedTags().includes(tag)), { sync: true });
+	const hasExactMatch = createMemo(() => !searchText() || notesStore.tags().some(tag => equals(tag, normaliseTag(searchText()))), { sync: true });
+	const enableActions = createMemo(() => !!(selectedCount() && selectedTags().length), { sync: true });
+	const [wrapperElem] = createStore({ value: dynamic(() => (props.allowEdit ? "div" : "a")) });
 
 	function syncState(direction: "up" | "down") {
 		if (!props.allowEdit || isSelecting()) {

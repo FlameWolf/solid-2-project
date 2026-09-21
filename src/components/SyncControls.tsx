@@ -40,26 +40,29 @@ export default function SyncControls() {
 		await setAutoSync(!autoSyncEnabled());
 	}
 
-	const lastSyncedLabel = createMemo(() => {
-		const ts = lastSyncedAt();
-		if (!ts) {
-			return null;
-		}
-		const diff = Date.now() - ts.getTime();
-		const seconds = Math.floor(diff / 1000);
-		if (seconds < 60) {
-			return "just now";
-		}
-		const minutes = Math.floor(seconds / 60);
-		if (minutes < 60) {
-			return `${minutes}m ago`;
-		}
-		const hours = Math.floor(minutes / 60);
-		if (hours < 24) {
-			return `${hours}h ago`;
-		}
-		return ts.toLocaleDateString();
-	});
+	const lastSyncedLabel = createMemo(
+		() => {
+			const ts = lastSyncedAt();
+			if (!ts) {
+				return null;
+			}
+			const diff = Date.now() - ts.getTime();
+			const seconds = Math.floor(diff / 1000);
+			if (seconds < 60) {
+				return "just now";
+			}
+			const minutes = Math.floor(seconds / 60);
+			if (minutes < 60) {
+				return `${minutes}m ago`;
+			}
+			const hours = Math.floor(minutes / 60);
+			if (hours < 24) {
+				return `${hours}h ago`;
+			}
+			return ts.toLocaleDateString();
+		},
+		{ sync: true }
+	);
 
 	createEffect(
 		() => ({ signedIn: isSignedIn(), autoSync: autoSyncEnabled() }),
