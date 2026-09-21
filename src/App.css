@@ -384,7 +384,7 @@ textarea.form-control {
 	transition: opacity 0.15s ease;
 }
 
-.confirm-overlay[data-visible="true"] {
+.confirm-overlay[data-visible] {
 	opacity: 1;
 	pointer-events: auto;
 }
@@ -401,7 +401,7 @@ textarea.form-control {
 	transition: transform 0.15s ease;
 }
 
-.confirm-overlay[data-visible="true"] .confirm-dialog {
+.confirm-overlay[data-visible] .confirm-dialog {
 	transform: scale(1);
 }
 
