@@ -43,8 +43,8 @@ const [contentMatchedIds, setContentMatchedIds] = createSignal(new Set<UUID>());
 export const notes = () => store.notes;
 export const tags = () => store.tags;
 export const searchText = createMemo(() => store.searchText, { sync: true });
-export const searchColours = createMemo(() => new Set(Array.from(store.searchColours)), { sync: true });
-export const searchTags = createMemo(() => new Set(Array.from(store.searchTags)), { sync: true });
+export const searchColours = createMemo(() => store.searchColours, { sync: true });
+export const searchTags = createMemo(() => store.searchTags, { sync: true });
 export const tagFilter = createMemo(() => store.tagFilter, { sync: true });
 export const isSearching = createMemo(() => store.isSearching, { sync: true });
 export const searchResults = createMemo(

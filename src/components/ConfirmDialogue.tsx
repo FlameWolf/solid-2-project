@@ -1,4 +1,4 @@
-import { onSettled, onCleanup, Show } from "solid-js";
+import { onSettled, Show } from "solid-js";
 import { onCancel, onConfirm, state } from "@/composables/useConfirmDialogue";
 
 export default function ConfirmDialogue() {
@@ -17,10 +17,9 @@ export default function ConfirmDialogue() {
 
 	onSettled(() => {
 		window.addEventListener("keydown", onKeyDown);
-	});
-
-	onCleanup(() => {
-		window.removeEventListener("keydown", onKeyDown);
+		return () => {
+			window.removeEventListener("keydown", onKeyDown);
+		};
 	});
 
 	return (

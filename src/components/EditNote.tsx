@@ -1,4 +1,4 @@
-import { createSignal, createMemo, createEffect, onSettled, onCleanup, Show } from "solid-js";
+import { createSignal, createMemo, createEffect, onSettled, Show } from "solid-js";
 import { useNavigate, useLocation, useParams, useBeforeLeave } from "@solidjs/router";
 import { emptyString } from "@/constants/common";
 import { areArraysEqual, areSetsEqual, invoke } from "@/utils/common";
@@ -377,15 +377,14 @@ export default function EditNote(props: Props) {
 		window.addEventListener("beforeunload", onBeforeUnload);
 		window.addEventListener("resize", adjustTextAreaHeight);
 		window.addEventListener("pagehide", flushDraft);
-	});
-
-	onCleanup(() => {
-		persistDraft.cancel();
-		debouncedPushUndo.cancel();
-		appStore.setCurrentColour(undefined);
-		window.removeEventListener("pagehide", flushDraft);
-		window.removeEventListener("resize", adjustTextAreaHeight);
-		window.removeEventListener("beforeunload", onBeforeUnload);
+		return () => {
+			persistDraft.cancel();
+			debouncedPushUndo.cancel();
+			appStore.setCurrentColour(undefined);
+			window.removeEventListener("pagehide", flushDraft);
+			window.removeEventListener("resize", adjustTextAreaHeight);
+			window.removeEventListener("beforeunload", onBeforeUnload);
+		};
 	});
 
 	useBeforeLeave(event => {

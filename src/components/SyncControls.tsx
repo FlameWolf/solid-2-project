@@ -1,4 +1,4 @@
-import { createSignal, createMemo, createEffect, onSettled, onCleanup, Show } from "solid-js";
+import { createSignal, createMemo, createEffect, onSettled, Show } from "solid-js";
 import { invoke } from "@/utils/common";
 import { purgeExpiredTrash } from "@/stores/notes";
 import { confirm } from "@/composables/useConfirmDialogue";
@@ -89,12 +89,11 @@ export default function SyncControls() {
 				requestSync(purgedIds);
 			}
 		});
-	});
-
-	onCleanup(() => {
-		if (readyTimeout) {
-			clearTimeout(readyTimeout);
-		}
+		return () => {
+			if (readyTimeout) {
+				clearTimeout(readyTimeout);
+			}
+		};
 	});
 
 	return (
