@@ -184,7 +184,7 @@ export default function EditNote(props: Props) {
 			const note = create(title, content);
 			note.colour = colour;
 			note.tags = tags?.length ? tags : undefined;
-			await notesStore.addNote(note);
+			notesStore.addNote(note);
 			navigate(`/notes/${note.id}`);
 		} else if (existingNote()) {
 			const { id: noteId, title: noteTitle } = existingNote()!;
@@ -317,7 +317,7 @@ export default function EditNote(props: Props) {
 			return;
 		}
 		const noteId = note.id;
-		await notesStore.permanentlyDelete(noteId);
+		notesStore.permanentlyDelete(noteId);
 		requestSync([noteId]);
 		navigate(backRoute());
 	}

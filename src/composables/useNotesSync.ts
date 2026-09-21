@@ -159,7 +159,7 @@ async function uploadNote(note: Note): Promise<NoteUploadResult> {
 			const remoteNote = fromJSON(remoteJSON);
 			switch (revisionSource(remoteNote, note)) {
 				case NoteChangeOrigin.Remote: {
-					await notesStore.replaceNote(remoteNote);
+					notesStore.replaceNote(remoteNote);
 					return NoteUploadResult.Conflict;
 				}
 				case NoteChangeOrigin.Local: {
@@ -193,12 +193,12 @@ async function runPull(force = false) {
 		const changes = mergeNotesByModifiedAt(notesStore.notes(), remoteNotes);
 		const changeCount = changes.length;
 		if (changeCount > 0) {
-			await notesStore.replaceMultiple(changes);
+			notesStore.replaceMultiple(changes);
 			downloaded += changeCount;
 		}
 		addNotification("success", `Fetching remote notes (${remoteCount} loaded)`);
 	} while (pageToken);
-	await purgeRemoteFiles(await notesStore.purgeExpiredTrash());
+	await purgeRemoteFiles(notesStore.purgeExpiredTrash());
 	setLastSyncedToLocalAt(syncStartedAt);
 	return { remoteCount, downloaded };
 }

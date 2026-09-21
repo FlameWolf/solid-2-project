@@ -84,7 +84,7 @@ export default function SyncControls() {
 		}
 		tryRestoreSession();
 		invoke(async () => {
-			const purgedIds = await purgeExpiredTrash();
+			const purgedIds = purgeExpiredTrash();
 			if (purgedIds.length > 0) {
 				requestSync(purgedIds);
 			}

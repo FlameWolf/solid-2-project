@@ -61,7 +61,7 @@ export function importFiles(): Promise<number> {
 				try {
 					const content = await file.text();
 					const title = file.name.replace(/\.txt$/i, emptyString) || "Untitled";
-					await notesStore.addNote(create(title, content));
+					notesStore.addNote(create(title, content));
 					count++;
 				} catch {
 					errors.push({

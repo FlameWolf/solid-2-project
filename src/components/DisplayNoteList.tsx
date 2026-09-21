@@ -255,17 +255,17 @@ export default function DisplayNoteList(props: Props) {
 				if (!ok) {
 					return;
 				}
-				await notesStore.permanentlyDeleteMultiple(ids);
+				notesStore.permanentlyDeleteMultiple(ids);
 				purgeNotes = true;
 				break;
 			}
 			default: {
 				if (isValidColour(key)) {
 					if (key === "none") {
-						await notesStore.unsetColourMultiple(ids);
+						notesStore.unsetColourMultiple(ids);
 						break;
 					}
-					await notesStore.setColourMultiple(ids, key);
+					notesStore.setColourMultiple(ids, key);
 				}
 				break;
 			}
@@ -293,7 +293,7 @@ export default function DisplayNoteList(props: Props) {
 			return;
 		}
 		const trashedNoteIds = trashed.map(n => n.id);
-		await notesStore.permanentlyDeleteMultiple(trashedNoteIds);
+		notesStore.permanentlyDeleteMultiple(trashedNoteIds);
 		requestSync(trashedNoteIds);
 	}
 

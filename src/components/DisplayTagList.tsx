@@ -100,7 +100,7 @@ export default function DisplayTagList(props: Props) {
 
 	async function createTag(tag: string) {
 		const normalised = normaliseTag(tag);
-		await notesStore.createTag(normalised);
+		notesStore.createTag(normalised);
 		setSelectedTags(tags => tags.concat(normalised));
 	}
 
@@ -117,7 +117,7 @@ export default function DisplayTagList(props: Props) {
 		});
 		if (ok) {
 			setSelectedTags(selected => selected.filter(tag => !tags.includes(tag)));
-			const affectedCount = await notesStore.deleteTags(tags.map(normaliseTag));
+			const affectedCount = notesStore.deleteTags(tags.map(normaliseTag));
 			if (affectedCount) {
 				requestSync();
 			}

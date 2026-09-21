@@ -152,12 +152,14 @@ export function setNoteTags(id: UUID, tags: string[] | undefined) {
 	});
 }
 
-export async function addNote(note: Note) {
+export function addNote(note: Note) {
 	setStore(draft => {
 		draft.notes = draft.notes.concat(note);
 		draft.tags = mergeArrays(draft.tags, note.tags);
 	});
-	await notesRepository.saveFull(snapshot(note));
+	invoke(async () => {
+		notesRepository.saveFull(snapshot(note));
+	});
 }
 
 export function updateNote(id: UUID, title: string, content: string) {
@@ -182,7 +184,7 @@ export function getNoteContent(id: UUID): Promise<string | undefined> {
 	return notesRepository.loadContent(id);
 }
 
-async function applyToNote(id: UUID, mutator: (note: Note) => void) {
+function applyToNote(id: UUID, mutator: (note: Note) => void) {
 	setStore(draft => {
 		const note = draft.notes.find(note => note.id === id);
 		if (!note) {
@@ -195,7 +197,7 @@ async function applyToNote(id: UUID, mutator: (note: Note) => void) {
 	});
 }
 
-async function applyToMany(ids: ReadonlyArray<UUID>, mutator: (note: Note) => void) {
+function applyToMany(ids: ReadonlyArray<UUID>, mutator: (note: Note) => void) {
 	const idSet = new Set<UUID>(ids);
 	setStore(draft => {
 		const targetNotes = draft.notes.filter(note => idSet.has(note.id));
@@ -262,45 +264,45 @@ export function restoreFromTrashMultiple(ids: ReadonlyArray<UUID>) {
 	applyToMany(ids, restore);
 }
 
-export async function setNoteColour(id: UUID, colour: string) {
-	await applyToNote(id, note => setColour(note, colour));
+export function setNoteColour(id: UUID, colour: string) {
+	applyToNote(id, note => setColour(note, colour));
 }
 
-export async function setColourMultiple(ids: ReadonlyArray<UUID>, colour: string) {
-	await applyToMany(ids, note => setColour(note, colour));
+export function setColourMultiple(ids: ReadonlyArray<UUID>, colour: string) {
+	applyToMany(ids, note => setColour(note, colour));
 }
 
-export async function unsetNoteColour(id: UUID) {
-	await applyToNote(id, unsetColour);
+export function unsetNoteColour(id: UUID) {
+	applyToNote(id, unsetColour);
 }
 
-export async function unsetColourMultiple(ids: ReadonlyArray<UUID>) {
-	await applyToMany(ids, unsetColour);
+export function unsetColourMultiple(ids: ReadonlyArray<UUID>) {
+	applyToMany(ids, unsetColour);
 }
 
-export async function addNoteTags(id: UUID, tags: string[]) {
-	await applyToNote(id, note => addTags(note, tags));
+export function addNoteTags(id: UUID, tags: string[]) {
+	applyToNote(id, note => addTags(note, tags));
 	setStore(draft => {
 		draft.tags = mergeArrays(draft.tags, tags);
 	});
 }
 
-export async function addTagsMultiple(ids: ReadonlyArray<UUID>, tags: string[]) {
-	await applyToMany(ids, note => addTags(note, tags));
+export function addTagsMultiple(ids: ReadonlyArray<UUID>, tags: string[]) {
+	applyToMany(ids, note => addTags(note, tags));
 	setStore(draft => {
 		draft.tags = mergeArrays(draft.tags, tags);
 	});
 }
 
-export async function removeNoteTags(id: UUID, tags: string[]) {
-	await applyToNote(id, note => removeTags(note, tags));
+export function removeNoteTags(id: UUID, tags: string[]) {
+	applyToNote(id, note => removeTags(note, tags));
 }
 
-export async function removeTagsMultiple(ids: ReadonlyArray<UUID>, tags: string[]) {
-	await applyToMany(ids, note => removeTags(note, tags));
+export function removeTagsMultiple(ids: ReadonlyArray<UUID>, tags: string[]) {
+	applyToMany(ids, note => removeTags(note, tags));
 }
 
-export async function permanentlyDelete(id: UUID) {
+export function permanentlyDelete(id: UUID) {
 	const index = store.notes.findIndex(note => note.id === id);
 	if (index === -1) {
 		return;
@@ -308,18 +310,22 @@ export async function permanentlyDelete(id: UUID) {
 	setStore(draft => {
 		draft.notes = draft.notes.toSpliced(index, 1);
 	});
-	await notesRepository.remove(id);
+	invoke(async () => {
+		await notesRepository.remove(id);
+	});
 }
 
-export async function permanentlyDeleteMultiple(ids: ReadonlyArray<UUID>) {
+export function permanentlyDeleteMultiple(ids: ReadonlyArray<UUID>) {
 	const idSet = new Set<UUID>(ids);
 	setStore(draft => {
 		draft.notes = draft.notes.filter(note => !idSet.has(note.id));
 	});
-	await notesRepository.removeMany(ids as UUID[]);
+	invoke(async () => {
+		await notesRepository.removeMany(ids as UUID[]);
+	});
 }
 
-export async function purgeExpiredTrash() {
+export function purgeExpiredTrash() {
 	const cutoff = Date.now() - TRASH_RETENTION_MS;
 	const expiredIds = store.notes
 		.filter(note => {
@@ -331,7 +337,9 @@ export async function purgeExpiredTrash() {
 		})
 		.map(expired => expired.id);
 	if (expiredIds.length > 0) {
-		await permanentlyDeleteMultiple(expiredIds);
+		invoke(async () => {
+			permanentlyDeleteMultiple(expiredIds);
+		});
 	}
 	return expiredIds;
 }
@@ -353,33 +361,41 @@ function addOrUpdate(updatedNote: Note) {
 	});
 }
 
-export async function replaceNote(updatedNote: Note) {
+export function replaceNote(updatedNote: Note) {
 	addOrUpdate(updatedNote);
-	await notesRepository.saveFull(snapshot(updatedNote));
+	invoke(async () => {
+		await notesRepository.saveFull(snapshot(updatedNote));
+	});
 }
 
-export async function replaceMultiple(updatedNotes: Note[]) {
+export function replaceMultiple(updatedNotes: Note[]) {
 	updatedNotes.forEach(addOrUpdate);
-	await notesRepository.saveManyFull(snapshot(updatedNotes));
+	invoke(async () => {
+		await notesRepository.saveManyFull(snapshot(updatedNotes));
+	});
 }
 
-export async function createTag(tag: string) {
+export function createTag(tag: string) {
 	if (!store.tags.includes(tag)) {
 		setStore(draft => {
 			draft.tags = draft.tags.concat(tag);
 		});
 	}
-	await tagsRepository.save(tag);
+	invoke(async () => {
+		await tagsRepository.save(tag);
+	});
 }
 
-export async function createTags(tags: string[]) {
+export function createTags(tags: string[]) {
 	setStore(draft => {
 		draft.tags = mergeArrays(draft.tags, tags);
 	});
-	await tagsRepository.saveMany(tags);
+	invoke(async () => {
+		await tagsRepository.saveMany(tags);
+	});
 }
 
-export async function deleteTags(tags: string[]) {
+export function deleteTags(tags: string[]) {
 	const tagSet = new Set(tags);
 	const affectedIds = store.notes.reduce((ids, note) => {
 		if (note.tags?.some(tag => tagSet.has(tag))) {
@@ -387,10 +403,12 @@ export async function deleteTags(tags: string[]) {
 		}
 		return ids;
 	}, [] as UUID[]);
-	await applyToMany(affectedIds, note => removeTags(note, tags));
+	applyToMany(affectedIds, note => removeTags(note, tags));
 	setStore(draft => {
 		draft.tags = tags.filter(tag => !tagSet.has(tag));
 	});
-	await Promise.all(tags.map(tag => tagsRepository.remove(tag)));
+	invoke(async () => {
+		await Promise.all(tags.map(tag => tagsRepository.remove(tag)));
+	});
 	return affectedIds.length;
 }
