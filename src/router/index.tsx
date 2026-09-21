@@ -1,9 +1,8 @@
-import { createEffect, createSignal, lazy, Show } from "solid-js";
-import { useBeforeLeave, useLocation } from "@solidjs/router";
+import { createEffect, createSignal, lazy, onSettled, Show } from "solid-js";
+import { createRouter, useBeforeLeave, useLocation, useNavigate } from "@solidjs/router";
 import { state as confirmState } from "@/composables/useConfirmDialogue";
 import DisplayNoteList from "@/components/DisplayNoteList";
 import EditNote from "@/components/EditNote";
-import { createRouter } from "@solidjs/router";
 
 export const listViewRoutes = ["/notes", "/notes/favourite", "/notes/archive", "/notes/trash"];
 const scrollPositions = new Map<string, number>();
@@ -52,6 +51,16 @@ export function RouteTransition() {
 	);
 }
 
+function Navigate(props: { href: string }) {
+	const navigate = useNavigate();
+
+	onSettled(() => {
+		navigate(props.href);
+	});
+
+	return null;
+}
+
 function getBackRoute(path: string) {
 	if (listViewRoutes.includes(path)) {
 		return path;
@@ -61,10 +70,10 @@ function getBackRoute(path: string) {
 
 export const Router = createRouter({
 	routes: [
-		{ path: "/", redirect: "/notes" },
-		{ path: "/favourite", redirect: "/notes/favourite" },
-		{ path: "/archive", redirect: "/notes/archive" },
-		{ path: "/trash", redirect: "/notes/trash" },
+		{ path: "/", component: () => <Navigate href="/notes"/> },
+		{ path: "/favourite", component: () => <Navigate href="/notes/favourite"/> },
+		{ path: "/archive", component: () => <Navigate href="/notes/archive"/> },
+		{ path: "/trash", component: () => <Navigate href="/notes/trash"/> },
 		{
 			path: "/notes",
 			component: () => <DisplayNoteList view="active"/>
@@ -86,7 +95,7 @@ export const Router = createRouter({
 			path: "/notes/:id",
 			component: () => <EditNote backRoute={getBackRoute(location.pathname)}/>
 		},
-		{ path: "/privacy", component: () => import("../components/PrivacyPolicy") },
-		{ path: "/terms", component: () => import("../components/TermsOfService") }
+		{ path: "/privacy", component: lazy(() => import("../components/PrivacyPolicy")) },
+		{ path: "/terms", component: lazy(() => import("../components/TermsOfService")) }
 	]
 });
