@@ -17,7 +17,6 @@ interface NotesState {
 	searchColours: Set<string>;
 	searchTags: Set<string>;
 	tagFilter: FilterType;
-	isLoading: boolean;
 	isSearching: boolean;
 }
 
@@ -28,8 +27,6 @@ const [store, setStore] = createStore<NotesState>(
 			draft.tags = await tagsRepository.loadAll();
 		} catch (err) {
 			console.error("Failed to load notes from storage", err);
-		} finally {
-			draft.isLoading = false;
 		}
 	},
 	{
@@ -39,10 +36,8 @@ const [store, setStore] = createStore<NotesState>(
 		searchColours: new Set<string>(),
 		searchTags: new Set<string>(),
 		tagFilter: "any",
-		isLoading: true,
 		isSearching: false
-	},
-	{ seedLoadingValue: true }
+	}
 );
 const [contentMatchedIds, setContentMatchedIds] = createSignal(new Set<UUID>());
 export const notes = () => store.notes;
@@ -51,7 +46,6 @@ export const searchText = createMemo(() => store.searchText, { sync: true });
 export const searchColours = createMemo(() => new Set(Array.from(store.searchColours)), { sync: true });
 export const searchTags = createMemo(() => new Set(Array.from(store.searchTags)), { sync: true });
 export const tagFilter = createMemo(() => store.tagFilter, { sync: true });
-export const isLoading = createMemo(() => store.isLoading, { sync: true });
 export const isSearching = createMemo(() => store.isSearching, { sync: true });
 export const searchResults = createMemo(
 	() => {

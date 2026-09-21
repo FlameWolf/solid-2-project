@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createSignal, For, Match, onSettled, Show, Switch } from "solid-js";
+import { createEffect, createMemo, createSignal, For, Loading, Match, onSettled, Show, Switch } from "solid-js";
 import { useBeforeLeave } from "@solidjs/router";
 import { bulkActions } from "@/constants/actions";
 import { colours } from "@/constants/colours";
@@ -318,113 +318,115 @@ export default function DisplayNoteList(props: Props) {
 					</a>
 				</div>
 			</Show>
-			<Switch fallback={
-					<EmptyState showActions={view() === "active"} showCreate={!isSearchMode()} importAction={handleImport}>
-						<Show when={isSearchMode()} fallback={emptyMessage()}>
-							<span>No results found for <mark>{notesStore.searchText()}</mark></span>
-							<Show when={view() === "active"}>
-								<div class="mt-3">
-									<em>Look in:</em>
+			<Loading fallback={<Spinner message="Loading notes..."/>}>
+				<Switch fallback={
+						<EmptyState showActions={view() === "active"} showCreate={!isSearchMode()} importAction={handleImport}>
+							<Show when={isSearchMode()} fallback={emptyMessage()}>
+								<span>No results found for <mark>{notesStore.searchText()}</mark></span>
+								<Show when={view() === "active"}>
+									<div class="mt-3">
+										<em>Look in:</em>
+									</div>
+								</Show>
+							</Show>
+						</EmptyState>
+					}>
+					<Match when={notesStore.isSearching()}>
+						<Spinner message="Searching..."/>
+					</Match>
+					<Match when={hasNotes() || notesStore.searchTags().size || notesStore.searchColours().size}>
+						<div>
+							<div class="d-flex gap-2 mb-3 justify-content-end flex-wrap">
+								<Show
+									when={isSelecting()}
+									fallback={
+										<>
+											<SortControls sortField={sortField()} sortOrder={sortOrder()} sortAction={onSortFieldChange} toggleAction={toggleSortDirection}/>
+											<div ref={setDropdownToggle} class="colour-circle vibgyor toolbar-icon rounded-circle" onClick={() => dropdown.toggle()} role="button" aria-label="Colour Filters">
+												<Show when={notesStore.searchColours().size}>
+													<Icon type="check2"/>
+												</Show>
+											</div>
+											<button class="btn btn-outline-secondary btn-sm" onClick={enterSelectionMode} title="Select" aria-label="Select">
+												<Icon type="check2Square"/>
+												<span class="d-none d-sm-inline ms-2">Select</span>
+											</button>
+											<Show when={view() === "active"}>
+												<button class="btn btn-outline-secondary btn-sm" onClick={handleImport} title="Import" aria-label="Import">
+													<Icon type="boxArrowDownRight"/>
+													<span class="d-none d-sm-inline ms-2">Import</span>
+												</button>
+												<button class="btn btn-outline-secondary btn-sm" onClick={exportAllNotes} title="Export All" aria-label="Export All">
+													<Icon type="boxArrowUpRight"/>
+													<span class="d-none d-sm-inline ms-2">Export All</span>
+												</button>
+												<a href="/notes/favourite" class="btn btn-outline-secondary btn-sm" title="Favourited" aria-label="Favourited">
+													<Icon type="star"/>
+													<span class="d-none d-sm-inline ms-2">Favourited</span>
+												</a>
+												<a href="/notes/archive" class="btn btn-outline-secondary btn-sm" title="Archived" aria-label="Archived">
+													<Icon type="archive"/>
+													<span class="d-none d-sm-inline ms-2">Archived</span>
+												</a>
+												<a href="/notes/trash" class="btn btn-outline-secondary btn-sm" title="Trash" aria-label="Trash">
+													<Icon type="trash"/>
+													<span class="d-none d-sm-inline ms-2">Trash</span>
+												</a>
+											</Show>
+											<Show when={view() === "trash"}>
+												<button class="btn btn-outline-danger btn-sm" onClick={handleEmptyTrash} title="Empty Trash" aria-label="Empty Trash">
+													<Icon type="trashFill"/>
+													<span class="d-none d-sm-inline ms-2">Empty Trash</span>
+												</button>
+											</Show>
+										</>
+									}>
+									<button class="btn btn-outline-secondary btn-sm" onClick={toggleSelectAll} title={selectAllText()} aria-label={selectAllText()}>
+										<Icon type={allSelected() ? "list" : "listCheck"}/>
+										<span class="d-none d-sm-inline ms-2">{selectAllText()}</span>
+									</button>
+									<button class="btn btn-outline-secondary btn-sm" onClick={exitSelectionMode} title="Cancel" aria-label="Cancel">
+										<Icon type="xCircle"/>
+										<span class="d-none d-sm-inline ms-2">Cancel</span>
+									</button>
+								</Show>
+							</div>
+							<Show when={dropdown.show()}>
+								<div ref={setDropdownMenu} class="d-flex justify-content-end mb-3">
+									<DisplayColourList filterMode={true} onSelectionChanged={updateSearchColours}/>
 								</div>
 							</Show>
-						</Show>
-					</EmptyState>
-				}>
-				<Match when={notesStore.isLoading() || notesStore.isSearching()}>
-					<Spinner message={notesStore.isSearching() ? "Searching..." : "Loading notes..."}/>
-				</Match>
-				<Match when={hasNotes() || notesStore.searchTags().size || notesStore.searchColours().size}>
-					<div>
-						<div class="d-flex gap-2 mb-3 justify-content-end flex-wrap">
-							<Show
-								when={isSelecting()}
-								fallback={
+							<DisplayTagList class="mb-3" activeTags={Array.from(notesStore.searchTags())} allowCreate={isSelecting()} allowDelete={true} allowEdit={true} allowManage={!isSelecting()} showFilterType={!isSelecting()}/>
+							<For each={noteSections()}>
+								{section => (
 									<>
-										<SortControls sortField={sortField()} sortOrder={sortOrder()} sortAction={onSortFieldChange} toggleAction={toggleSortDirection}/>
-										<div ref={setDropdownToggle} class="colour-circle vibgyor toolbar-icon rounded-circle" onClick={() => dropdown.toggle()} role="button" aria-label="Colour Filters">
-											<Show when={notesStore.searchColours().size}>
-												<Icon type="check2"/>
+										<Show when={section.divider}>
+											<div class="d-flex align-items-center my-4">
+												<div class="flex-grow-1 border-bottom"></div>
+												<span class="px-3 text-muted small">{section.divider}</span>
+												<div class="flex-grow-1 border-bottom"></div>
+											</div>
+										</Show>
+										<div class="notes-grid">
+											<Show when={section.showNewCard && !isSelecting()}>
+												<a href="/notes/new" class="card note-card new-note-card text-decoration-none">
+													<div class="card-body d-flex align-items-center justify-content-center">
+														<span class="fs-1 text-muted">+</span>
+													</div>
+												</a>
 											</Show>
+											<For each={section.notes}>{note => <NoteCard note={note} selectionMode={isSelecting()} selected={isSelected(note.id)} clickAction={onTileClick}/>}</For>
 										</div>
-										<button class="btn btn-outline-secondary btn-sm" onClick={enterSelectionMode} title="Select" aria-label="Select">
-											<Icon type="check2Square"/>
-											<span class="d-none d-sm-inline ms-2">Select</span>
-										</button>
-										<Show when={view() === "active"}>
-											<button class="btn btn-outline-secondary btn-sm" onClick={handleImport} title="Import" aria-label="Import">
-												<Icon type="boxArrowDownRight"/>
-												<span class="d-none d-sm-inline ms-2">Import</span>
-											</button>
-											<button class="btn btn-outline-secondary btn-sm" onClick={exportAllNotes} title="Export All" aria-label="Export All">
-												<Icon type="boxArrowUpRight"/>
-												<span class="d-none d-sm-inline ms-2">Export All</span>
-											</button>
-											<a href="/notes/favourite" class="btn btn-outline-secondary btn-sm" title="Favourited" aria-label="Favourited">
-												<Icon type="star"/>
-												<span class="d-none d-sm-inline ms-2">Favourited</span>
-											</a>
-											<a href="/notes/archive" class="btn btn-outline-secondary btn-sm" title="Archived" aria-label="Archived">
-												<Icon type="archive"/>
-												<span class="d-none d-sm-inline ms-2">Archived</span>
-											</a>
-											<a href="/notes/trash" class="btn btn-outline-secondary btn-sm" title="Trash" aria-label="Trash">
-												<Icon type="trash"/>
-												<span class="d-none d-sm-inline ms-2">Trash</span>
-											</a>
-										</Show>
-										<Show when={view() === "trash"}>
-											<button class="btn btn-outline-danger btn-sm" onClick={handleEmptyTrash} title="Empty Trash" aria-label="Empty Trash">
-												<Icon type="trashFill"/>
-												<span class="d-none d-sm-inline ms-2">Empty Trash</span>
-											</button>
-										</Show>
 									</>
-								}>
-								<button class="btn btn-outline-secondary btn-sm" onClick={toggleSelectAll} title={selectAllText()} aria-label={selectAllText()}>
-									<Icon type={allSelected() ? "list" : "listCheck"}/>
-									<span class="d-none d-sm-inline ms-2">{selectAllText()}</span>
-								</button>
-								<button class="btn btn-outline-secondary btn-sm" onClick={exitSelectionMode} title="Cancel" aria-label="Cancel">
-									<Icon type="xCircle"/>
-									<span class="d-none d-sm-inline ms-2">Cancel</span>
-								</button>
+								)}
+							</For>
+							<Show when={isSelecting() && selectedCount() > 0}>
+								<SelectionActionBar showColours={true} selectedCount={selectedCount()} actions={selectionActions()} onAction={handleSelectionAction} onCancel={exitSelectionMode}/>
 							</Show>
 						</div>
-						<Show when={dropdown.show()}>
-							<div ref={setDropdownMenu} class="d-flex justify-content-end mb-3">
-								<DisplayColourList filterMode={true} onSelectionChanged={updateSearchColours}/>
-							</div>
-						</Show>
-						<DisplayTagList class="mb-3" activeTags={Array.from(notesStore.searchTags())} allowCreate={isSelecting()} allowDelete={true} allowEdit={true} allowManage={!isSelecting()} showFilterType={!isSelecting()}/>
-						<For each={noteSections()}>
-							{section => (
-								<>
-									<Show when={section.divider}>
-										<div class="d-flex align-items-center my-4">
-											<div class="flex-grow-1 border-bottom"></div>
-											<span class="px-3 text-muted small">{section.divider}</span>
-											<div class="flex-grow-1 border-bottom"></div>
-										</div>
-									</Show>
-									<div class="notes-grid">
-										<Show when={section.showNewCard && !isSelecting()}>
-											<a href="/notes/new" class="card note-card new-note-card text-decoration-none">
-												<div class="card-body d-flex align-items-center justify-content-center">
-													<span class="fs-1 text-muted">+</span>
-												</div>
-											</a>
-										</Show>
-										<For each={section.notes}>{note => <NoteCard note={note} selectionMode={isSelecting()} selected={isSelected(note.id)} clickAction={onTileClick}/>}</For>
-									</div>
-								</>
-							)}
-						</For>
-						<Show when={isSelecting() && selectedCount() > 0}>
-							<SelectionActionBar showColours={true} selectedCount={selectedCount()} actions={selectionActions()} onAction={handleSelectionAction} onCancel={exitSelectionMode}/>
-						</Show>
-					</div>
-				</Match>
-			</Switch>
+					</Match>
+				</Switch>
+			</Loading>
 		</>
 	);
 }

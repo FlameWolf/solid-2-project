@@ -1,6 +1,6 @@
 import { createSignal, createMemo, createEffect, onSettled, onCleanup, Show } from "solid-js";
 import { invoke } from "@/utils/common";
-import { isLoading, purgeExpiredTrash } from "@/stores/notes";
+import { purgeExpiredTrash } from "@/stores/notes";
 import { confirm } from "@/composables/useConfirmDialogue";
 import { useDropdown } from "@/composables/useDropdown";
 import { isConfigured, isReady, isSignedIn, signIn, signOut, tryRestoreSession, user } from "@/composables/useGoogleAuth";
@@ -74,22 +74,6 @@ export default function SyncControls() {
 		}
 	);
 
-	createEffect(
-		isLoading,
-		loading => {
-			if (loading) {
-				return;
-			}
-			invoke(async () => {
-				const purgedIds = await purgeExpiredTrash();
-				if (purgedIds.length > 0) {
-					requestSync(purgedIds);
-				}
-			});
-		},
-		{ defer: true }
-	);
-
 	onSettled(() => {
 		if (isConfigured) {
 			readyTimeout = setTimeout(() => {
@@ -99,6 +83,12 @@ export default function SyncControls() {
 			}, 6000);
 		}
 		tryRestoreSession();
+		invoke(async () => {
+			const purgedIds = await purgeExpiredTrash();
+			if (purgedIds.length > 0) {
+				requestSync(purgedIds);
+			}
+		});
 	});
 
 	onCleanup(() => {

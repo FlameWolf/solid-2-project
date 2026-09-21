@@ -1,7 +1,6 @@
 import "./App.css";
-import { getOwner, onSettled, Show } from "solid-js";
+import { getOwner, Loading, onSettled } from "solid-js";
 import { currentColour } from "@/stores/app";
-import { isLoading } from "@/stores/notes";
 import { RouteTransition } from "@/router";
 import { setAppOwner } from "@/composables/useAppOwner";
 import { purgeStaleDrafts } from "@/composables/useNoteDraft";
@@ -43,9 +42,7 @@ export default function App(props: AppProps) {
 						</div>
 					</nav>
 					<main class={["flex-grow-1 container px-2 py-4", { [`bg-${currentColour()}`]: !!currentColour() }]}>
-						<Show when={isLoading()} fallback={props.children}>
-							<Spinner message="Loading notes..."/>
-						</Show>
+						<Loading fallback={<Spinner message="Loading notes..."/>}>{props.children}</Loading>
 					</main>
 					<footer class="bg-body-tertiary border-top">
 						<div class="d-flex flex-wrap justify-content-center align-items-center gap-3 small text-muted px-2 py-3">
