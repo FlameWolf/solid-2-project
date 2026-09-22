@@ -95,8 +95,5 @@ export default defineConfig(({ command }) => ({
 				}
 			}
 		}
-	},
-	server: {
-		port: 5137
 	}
 }));
