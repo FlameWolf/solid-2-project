@@ -441,7 +441,7 @@ export async function deleteTags(tags: string[]) {
 		}, [] as UUID[]);
 		await applyToMany(affectedIds, note => removeTags(note, tags));
 		setStore(draft => {
-			draft.tags = tags.filter(tag => !tagSet.has(tag));
+			draft.tags = draft.tags.filter(tag => !tagSet.has(tag));
 		});
 		invoke(async () => {
 			await Promise.all(tags.map(tag => tagsRepository.remove(tag)));
