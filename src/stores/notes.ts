@@ -24,7 +24,15 @@ const [store, setStore] = createStore<NotesState>(
 	async draft => {
 		try {
 			draft.notes = await notesRepository.loadAll();
-			draft.tags = await tagsRepository.loadAll();
+			draft.tags = mergeArrays(
+				draft.notes.reduce((tags, note) => {
+					if (note.tags) {
+						return tags.concat(note.tags);
+					}
+					return tags;
+				}, [] as string[]),
+				await tagsRepository.loadAll()
+			);
 		} catch (err) {
 			console.error("Failed to load notes from storage", err);
 		}
