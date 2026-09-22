@@ -161,7 +161,9 @@ export default function EditNote(props: Props) {
 		}
 		if (isCreateMode()) {
 			setIsEditing(false);
-			navigate(backRoute());
+			queueMicrotask(() => {
+				navigate(backRoute());
+			});
 		} else {
 			const note = existingNote();
 			if (note) {
