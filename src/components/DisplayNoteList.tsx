@@ -211,19 +211,19 @@ export default function DisplayNoteList(props: Props) {
 				break;
 			}
 			case "fave": {
-				notesStore.faveMultiple(ids);
+				await notesStore.faveMultiple(ids);
 				break;
 			}
 			case "unfave": {
-				notesStore.unfaveMultiple(ids);
+				await notesStore.unfaveMultiple(ids);
 				break;
 			}
 			case "archive": {
-				notesStore.archiveMultiple(ids);
+				await notesStore.archiveMultiple(ids);
 				break;
 			}
 			case "unarchive": {
-				notesStore.unarchiveMultiple(ids);
+				await notesStore.unarchiveMultiple(ids);
 				break;
 			}
 			case "trash": {
@@ -237,11 +237,11 @@ export default function DisplayNoteList(props: Props) {
 				if (!ok) {
 					return;
 				}
-				notesStore.trashMultiple(ids);
+				await notesStore.trashMultiple(ids);
 				break;
 			}
 			case "restore": {
-				notesStore.restoreFromTrashMultiple(ids);
+				await notesStore.restoreFromTrashMultiple(ids);
 				break;
 			}
 			case "permanent": {
@@ -255,17 +255,17 @@ export default function DisplayNoteList(props: Props) {
 				if (!ok) {
 					return;
 				}
-				notesStore.permanentlyDeleteMultiple(ids);
+				await notesStore.permanentlyDeleteMultiple(ids);
 				purgeNotes = true;
 				break;
 			}
 			default: {
 				if (isValidColour(key)) {
 					if (key === "none") {
-						notesStore.unsetColourMultiple(ids);
+						await notesStore.unsetColourMultiple(ids);
 						break;
 					}
-					notesStore.setColourMultiple(ids, key);
+					await notesStore.setColourMultiple(ids, key);
 				}
 				break;
 			}
@@ -293,7 +293,7 @@ export default function DisplayNoteList(props: Props) {
 			return;
 		}
 		const trashedNoteIds = trashed.map(n => n.id);
-		notesStore.permanentlyDeleteMultiple(trashedNoteIds);
+		await notesStore.permanentlyDeleteMultiple(trashedNoteIds);
 		requestSync(trashedNoteIds);
 	}
 

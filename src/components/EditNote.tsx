@@ -184,18 +184,18 @@ export default function EditNote(props: Props) {
 			const note = create(title, content);
 			note.colour = colour;
 			note.tags = tags?.length ? tags : undefined;
-			notesStore.addNote(note);
+			await notesStore.addNote(note);
 			navigate(`/notes/${note.id}`);
 		} else if (existingNote()) {
 			const { id: noteId, title: noteTitle } = existingNote()!;
 			if (colour) {
-				notesStore.setNoteColour(noteId, colour);
+				await notesStore.setNoteColour(noteId, colour);
 			} else {
-				notesStore.unsetNoteColour(noteId);
+				await notesStore.unsetNoteColour(noteId);
 			}
 			notesStore.setNoteTags(noteId, tags);
 			if (title !== noteTitle || content !== loadedContent()) {
-				notesStore.updateNote(noteId, title, content);
+				await notesStore.updateNote(noteId, title, content);
 			}
 			setLoadedContent(content);
 		}
@@ -226,7 +226,7 @@ export default function EditNote(props: Props) {
 		if (!ok) {
 			return;
 		}
-		notesStore.trashNote(note.id);
+		await notesStore.trashNote(note.id);
 		requestSync();
 		navigate(backRoute());
 	}
@@ -236,7 +236,7 @@ export default function EditNote(props: Props) {
 		if (!note) {
 			return;
 		}
-		notesStore.faveNote(note.id);
+		await notesStore.faveNote(note.id);
 		requestSync();
 	}
 
@@ -245,7 +245,7 @@ export default function EditNote(props: Props) {
 		if (!note) {
 			return;
 		}
-		notesStore.unfaveNote(note.id);
+		await notesStore.unfaveNote(note.id);
 		requestSync();
 	}
 
@@ -254,7 +254,7 @@ export default function EditNote(props: Props) {
 		if (!note) {
 			return;
 		}
-		notesStore.pinNote(note.id);
+		await notesStore.pinNote(note.id);
 		requestSync();
 	}
 
@@ -263,40 +263,40 @@ export default function EditNote(props: Props) {
 		if (!note) {
 			return;
 		}
-		notesStore.unpinNote(note.id);
+		await notesStore.unpinNote(note.id);
 		requestSync();
 	}
 
-	function archiveCurrent() {
+	async function archiveCurrent() {
 		const note = existingNote();
 		if (!note) {
 			return;
 		}
-		notesStore.archiveNote(note.id);
-		requestSync();
-		if (appStore.lastView() !== "favourited") {
-			navigate(backRoute());
-		}
-	}
-
-	function unarchiveCurrent() {
-		const note = existingNote();
-		if (!note) {
-			return;
-		}
-		notesStore.unarchiveNote(note.id);
+		await notesStore.archiveNote(note.id);
 		requestSync();
 		if (appStore.lastView() !== "favourited") {
 			navigate(backRoute());
 		}
 	}
 
-	function restoreNote() {
+	async function unarchiveCurrent() {
 		const note = existingNote();
 		if (!note) {
 			return;
 		}
-		notesStore.restoreFromTrash(note.id);
+		await notesStore.unarchiveNote(note.id);
+		requestSync();
+		if (appStore.lastView() !== "favourited") {
+			navigate(backRoute());
+		}
+	}
+
+	async function restoreNote() {
+		const note = existingNote();
+		if (!note) {
+			return;
+		}
+		await notesStore.restoreFromTrash(note.id);
 		requestSync();
 		navigate(backRoute());
 	}
@@ -317,7 +317,7 @@ export default function EditNote(props: Props) {
 			return;
 		}
 		const noteId = note.id;
-		notesStore.permanentlyDelete(noteId);
+		await notesStore.permanentlyDelete(noteId);
 		requestSync([noteId]);
 		navigate(backRoute());
 	}

@@ -100,7 +100,7 @@ export default function DisplayTagList(props: Props) {
 
 	async function createTag(tag: string) {
 		const normalised = normaliseTag(tag);
-		notesStore.createTag(normalised);
+		await notesStore.createTag(normalised);
 		setSelectedTags(tags => tags.concat(normalised));
 	}
 
@@ -117,7 +117,7 @@ export default function DisplayTagList(props: Props) {
 		});
 		if (ok) {
 			setSelectedTags(selected => selected.filter(tag => !tags.includes(tag)));
-			const affectedCount = notesStore.deleteTags(tags.map(normaliseTag));
+			const affectedCount = await notesStore.deleteTags(tags.map(normaliseTag));
 			if (affectedCount) {
 				requestSync();
 			}
@@ -140,11 +140,11 @@ export default function DisplayTagList(props: Props) {
 		}
 		switch (action) {
 			case "add": {
-				notesStore.addTagsMultiple(Array.from(selectedIds()), selectedTags());
+				await notesStore.addTagsMultiple(Array.from(selectedIds()), selectedTags());
 				break;
 			}
 			case "remove": {
-				notesStore.removeTagsMultiple(Array.from(selectedIds()), selectedTags());
+				await notesStore.removeTagsMultiple(Array.from(selectedIds()), selectedTags());
 				break;
 			}
 		}
