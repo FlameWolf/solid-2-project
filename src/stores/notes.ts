@@ -1,7 +1,7 @@
 import { createMemo, createSignal, createStore, snapshot } from "solid-js";
 import { emptyString } from "@/constants/common";
 import { TRASH_RETENTION_MS } from "@/constants/notes";
-import { arrayContainsSet, invoke, mergeArrays } from "@/utils/common";
+import { arrayContainsSet, mergeArrays } from "@/utils/common";
 import { contains } from "@/utils/text-analysis";
 import { addTags, archive, fave, pin, removeTags, restore, setColour, trash, unarchive, unfave, unpin, unsetColour, update, type Note } from "@/models/Note";
 import { notesRepository } from "@/storage/NotesRepository";
@@ -160,67 +160,67 @@ export function setNoteTags(id: UUID, tags: string[] | undefined) {
 	});
 }
 
-export async function addNote(note: Note) {
+export const addNote = async (note: Note) => {
 	setStore(draft => {
 		draft.notes = draft.notes.concat(note);
 		draft.tags = mergeArrays(draft.tags, note.tags);
 	});
-	await notesRepository.saveFull(snapshot(note));
-}
+	await notesRepository.saveFull(note);
+};
 
 export async function updateNote(id: UUID, title: string, content: string) {
-	await new Promise<void>(resolve => {
+	const updatedNote = await new Promise<Note | undefined>(resolve => {
 		setStore(draft => {
 			const note = draft.notes.find(note => note.id === id);
 			if (!note) {
-				return resolve();
+				resolve(undefined);
+				return;
 			}
 			update(note, title, content);
 			draft.tags = mergeArrays(draft.tags, note.tags);
-			invoke(async () => {
-				await notesRepository.saveFull(snapshot(note));
-				resolve();
-			});
+			resolve(snapshot(note));
 		});
 	});
+	if (updatedNote) {
+		await notesRepository.saveFull(updatedNote);
+	}
 }
 
-export function getNote(id: UUID): Note | undefined {
+export function getNote(id: UUID) {
 	return store.notes.find(note => note.id === id);
 }
 
-export function getNoteContent(id: UUID): Promise<string | undefined> {
-	return notesRepository.loadContent(id);
+export async function getNoteContent(id: UUID) {
+	return await notesRepository.loadContent(id);
 }
 
 async function applyToNote(id: UUID, mutator: (note: Note) => void) {
-	await new Promise<void>(resolve => {
+	const updatedNote = await new Promise<Note | undefined>(resolve => {
 		setStore(draft => {
 			const note = draft.notes.find(note => note.id === id);
 			if (!note) {
-				return resolve();
+				resolve(undefined);
+				return;
 			}
 			mutator(note);
-			invoke(async () => {
-				await notesRepository.saveMeta(snapshot(note));
-				resolve();
-			});
+			resolve(snapshot(note));
 		});
 	});
+	if (updatedNote) {
+		await notesRepository.saveMeta(updatedNote);
+	}
 }
 
 async function applyToMany(ids: ReadonlyArray<UUID>, mutator: (note: Note) => void) {
-	await new Promise<void>(resolve => {
-		const idSet = new Set<UUID>(ids);
+	const idSet = new Set<UUID>(ids);
+	const updatedNotes = await new Promise<Note[]>(resolve => {
 		setStore(draft => {
 			const targetNotes = draft.notes.filter(note => idSet.has(note.id));
 			targetNotes.forEach(mutator);
-			invoke(async () => {
-				await notesRepository.saveManyMeta(snapshot(targetNotes));
-				resolve();
-			});
+			resolve(snapshot(targetNotes));
 		});
 	});
+	await notesRepository.saveManyMeta(updatedNotes);
 }
 
 export async function faveNote(id: UUID) {
@@ -318,53 +318,39 @@ export async function removeTagsMultiple(ids: ReadonlyArray<UUID>, tags: string[
 }
 
 export async function permanentlyDelete(id: UUID) {
-	await new Promise<void>(resolve => {
-		const index = store.notes.findIndex(note => note.id === id);
-		if (index === -1) {
-			return resolve();
-		}
-		setStore(draft => {
-			draft.notes = draft.notes.toSpliced(index, 1);
-		});
-		invoke(async () => {
-			await notesRepository.remove(id);
-			resolve();
-		});
+	const index = store.notes.findIndex(note => note.id === id);
+	if (index === -1) {
+		return;
+	}
+	setStore(draft => {
+		draft.notes = draft.notes.toSpliced(index, 1);
 	});
+	await notesRepository.remove(id);
 }
 
 export async function permanentlyDeleteMultiple(ids: ReadonlyArray<UUID>) {
-	await new Promise<void>(resolve => {
-		const idSet = new Set<UUID>(ids);
-		setStore(draft => {
-			draft.notes = draft.notes.filter(note => !idSet.has(note.id));
-		});
-		invoke(async () => {
-			await notesRepository.removeMany(ids as UUID[]);
-			resolve();
-		});
+	const idSet = new Set<UUID>(ids);
+	setStore(draft => {
+		draft.notes = draft.notes.filter(note => !idSet.has(note.id));
 	});
+	await notesRepository.removeMany(ids as UUID[]);
 }
 
 export async function purgeExpiredTrash() {
-	return await new Promise<UUID[]>(resolve => {
-		const cutoff = Date.now() - TRASH_RETENTION_MS;
-		const expiredIds = store.notes.reduce((ids, note) => {
-			if (note.deletedAt) {
-				const tombstoneTime = note.deletedAt.getTime();
-				if (tombstoneTime < cutoff) {
-					return ids.concat(note.id);
-				}
+	const cutoff = Date.now() - TRASH_RETENTION_MS;
+	const expiredIds = store.notes.reduce((ids, note) => {
+		if (note.deletedAt) {
+			const tombstoneTime = note.deletedAt.getTime();
+			if (tombstoneTime < cutoff) {
+				return ids.concat(note.id);
 			}
-			return ids;
-		}, [] as UUID[]);
-		if (expiredIds.length > 0) {
-			invoke(async () => {
-				permanentlyDeleteMultiple(expiredIds);
-				resolve(expiredIds);
-			});
 		}
-	});
+		return ids;
+	}, [] as UUID[]);
+	if (expiredIds.length > 0) {
+		await permanentlyDeleteMultiple(expiredIds);
+	}
+	return expiredIds;
 }
 
 function addOrUpdate(updatedNote: Note) {
@@ -376,7 +362,7 @@ function addOrUpdate(updatedNote: Note) {
 				break;
 			}
 			default: {
-				draft.notes[index] = updatedNote;
+				draft.notes.splice(index, 1, updatedNote);
 				break;
 			}
 		}
@@ -385,67 +371,43 @@ function addOrUpdate(updatedNote: Note) {
 }
 
 export async function replaceNote(updatedNote: Note) {
-	await new Promise<void>(resolve => {
-		addOrUpdate(updatedNote);
-		invoke(async () => {
-			await notesRepository.saveFull(snapshot(updatedNote));
-			resolve();
-		});
-	});
+	addOrUpdate(updatedNote);
+	await notesRepository.saveFull(updatedNote);
 }
 
 export async function replaceMultiple(updatedNotes: Note[]) {
-	await new Promise<void>(resolve => {
-		updatedNotes.forEach(addOrUpdate);
-		invoke(async () => {
-			await notesRepository.saveManyFull(snapshot(updatedNotes));
-			resolve();
-		});
-	});
+	updatedNotes.forEach(addOrUpdate);
+	await notesRepository.saveManyFull(updatedNotes);
 }
 
 export async function createTag(tag: string) {
-	await new Promise<void>(resolve => {
-		if (!store.tags.includes(tag)) {
-			setStore(draft => {
-				draft.tags = draft.tags.concat(tag);
-			});
-		}
-		invoke(async () => {
-			await tagsRepository.save(tag);
-			resolve();
+	if (!store.tags.includes(tag)) {
+		setStore(draft => {
+			draft.tags = draft.tags.concat(tag);
 		});
-	});
+	}
+	await tagsRepository.save(tag);
 }
 
 export async function createTags(tags: string[]) {
-	await new Promise<void>(resolve => {
-		setStore(draft => {
-			draft.tags = mergeArrays(draft.tags, tags);
-		});
-		invoke(async () => {
-			await tagsRepository.saveMany(tags);
-			resolve();
-		});
+	setStore(draft => {
+		draft.tags = mergeArrays(draft.tags, tags);
 	});
+	await tagsRepository.saveMany(tags);
 }
 
 export async function deleteTags(tags: string[]) {
-	return await new Promise<number>(async resolve => {
-		const tagSet = new Set(tags);
-		const affectedIds = store.notes.reduce((ids, note) => {
-			if (note.tags?.some(tag => tagSet.has(tag))) {
-				return ids.concat(note.id);
-			}
-			return ids;
-		}, [] as UUID[]);
-		await applyToMany(affectedIds, note => removeTags(note, tags));
-		setStore(draft => {
-			draft.tags = draft.tags.filter(tag => !tagSet.has(tag));
-		});
-		invoke(async () => {
-			await Promise.all(tags.map(tag => tagsRepository.remove(tag)));
-			resolve(affectedIds.length);
-		});
+	const tagSet = new Set(tags);
+	const affectedIds = store.notes.reduce((ids, note) => {
+		if (note.tags?.some(tag => tagSet.has(tag))) {
+			return ids.concat(note.id);
+		}
+		return ids;
+	}, [] as UUID[]);
+	await applyToMany(affectedIds, note => removeTags(note, tags));
+	setStore(draft => {
+		draft.tags = draft.tags.filter(tag => !tagSet.has(tag));
 	});
+	await Promise.all(tags.map(tag => tagsRepository.remove(tag)));
+	return affectedIds.length;
 }
