@@ -394,14 +394,14 @@ export default function EditNote(props: Props) {
 			return;
 		}
 		event.preventDefault();
-		(async () => {
+		queueMicrotask(async () => {
 			const ok = await confirmDiscardChanges();
 			if (ok) {
 				bypassGuard = true;
 				clearDraft(draftId());
 				event.retry(true);
 			}
-		})();
+		});
 	});
 
 	createEffect(
