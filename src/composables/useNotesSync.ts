@@ -2,7 +2,6 @@ import { createEffect, createMemo, createSignal, createStore, runWithOwner } fro
 import { emptyString } from "@/constants/common";
 import { NOTE_PREFIX } from "@/constants/storage";
 import { LAST_SYNCED_TO_LOCAL_KEY, LAST_SYNCED_TO_CLOUD_KEY, AUTO_SYNC_KEY, DEBOUNCE_MS } from "@/constants/sync";
-import { invoke } from "@/utils/common";
 import { getTime } from "@/utils/dates";
 import { debounce } from "@/utils/timing";
 import { fromJSON, toJSON, type Note, type NoteJSON } from "@/models/Note";
@@ -270,7 +269,7 @@ runWithOwner(getAppOwner(), () => {
 	createEffect(
 		lastSyncedToLocalAt,
 		date => {
-			invoke(async () => {
+			queueMicrotask(async () => {
 				if (date) {
 					await setKV(LAST_SYNCED_TO_LOCAL_KEY, date.toISOString());
 				} else {
@@ -283,7 +282,7 @@ runWithOwner(getAppOwner(), () => {
 	createEffect(
 		lastSyncedToCloudAt,
 		date => {
-			invoke(async () => {
+			queueMicrotask(async () => {
 				if (date) {
 					await setKV(LAST_SYNCED_TO_CLOUD_KEY, date.toISOString());
 				} else {
@@ -296,7 +295,7 @@ runWithOwner(getAppOwner(), () => {
 	createEffect(
 		() => state.autoSyncEnabled,
 		flag => {
-			invoke(async () => {
+			queueMicrotask(async () => {
 				await setKV(AUTO_SYNC_KEY, flag);
 			});
 		},

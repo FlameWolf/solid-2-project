@@ -1,7 +1,6 @@
 import { createEffect, createMemo, createSignal, createStore, runWithOwner, snapshot } from "solid-js";
 import { TOKEN_KEY, EXPIRY_KEY, USER_KEY, CLIENT_ID, SESSION_KEY, TOKEN_REFRESH_BUFFER_MS, AUTH_TOKEN_URL, AUTH_START_URL, AUTH_SIGNOUT_URL } from "@/constants/auth";
 import { LAST_SYNCED_TO_CLOUD_KEY, LAST_SYNCED_TO_LOCAL_KEY } from "@/constants/sync";
-import { invoke } from "@/utils/common";
 import { deleteKV, getKV, setKV } from "@/storage/db";
 import { getAppOwner } from "@/composables/useAppOwner";
 
@@ -210,7 +209,7 @@ runWithOwner(getAppOwner(), () => {
 	createEffect(
 		() => ({ token: accessToken(), expiresAt: tokenExpiresAt() }),
 		({ token, expiresAt }) => {
-			invoke(async () => {
+			queueMicrotask(async () => {
 				if (!token || !expiresAt) {
 					await deleteKV(TOKEN_KEY);
 					await deleteKV(EXPIRY_KEY);
@@ -227,7 +226,7 @@ runWithOwner(getAppOwner(), () => {
 	createEffect(
 		() => state.user,
 		info => {
-			invoke(async () => {
+			queueMicrotask(async () => {
 				if (!info) {
 					await deleteKV(USER_KEY);
 					return;

@@ -1,7 +1,6 @@
 import { createEffect, createMemo, createStore, runWithOwner } from "solid-js";
 import { colours } from "@/constants/colours";
 import { SORT_FIELDS, SORT_DIRECTIONS, SORT_BY_KEY, SORT_DIRECTION_KEY } from "@/constants/sort";
-import { invoke } from "@/utils/common";
 import { getKV, setKV } from "@/storage/db";
 import { getAppOwner } from "@/composables/useAppOwner";
 import type { Note } from "@/models/Note";
@@ -100,7 +99,7 @@ runWithOwner(getAppOwner(), () => {
 	createEffect(
 		() => state.sortField,
 		field => {
-			invoke(async () => {
+			queueMicrotask(async () => {
 				await setKV(SORT_BY_KEY, field);
 			});
 		},
@@ -109,7 +108,7 @@ runWithOwner(getAppOwner(), () => {
 	createEffect(
 		() => state.sortOrder,
 		order => {
-			invoke(async () => {
+			queueMicrotask(async () => {
 				await setKV(SORT_DIRECTION_KEY, order);
 			});
 		},

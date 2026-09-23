@@ -1,7 +1,7 @@
 import { createSignal, createMemo, createEffect, onSettled, Show } from "solid-js";
 import { useNavigate, useLocation, useParams, useBeforeLeave } from "@solidjs/router";
 import { emptyString } from "@/constants/common";
-import { areArraysEqual, areSetsEqual, invoke } from "@/utils/common";
+import { areArraysEqual, areSetsEqual } from "@/utils/common";
 import { getSentenceCount, getWordCount, getCharacterCount } from "@/utils/text-analysis";
 import { debounce } from "@/utils/timing";
 import { create } from "@/models/Note";
@@ -413,7 +413,7 @@ export default function EditNote(props: Props) {
 			setEditColour(undefined);
 			setEditTags(undefined);
 			setIsEditing(isCreateMode());
-			invoke(async () => {
+			queueMicrotask(async () => {
 				if (id && !isCreateMode()) {
 					const note = existingNote();
 					if (note) {
