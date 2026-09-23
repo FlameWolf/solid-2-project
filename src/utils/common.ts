@@ -1,7 +1,3 @@
-export function invoke<TArgs extends unknown[]>(fn: (...args: TArgs) => unknown, ...args: TArgs): void {
-	fn(...args);
-}
-
 export function camelToKebab(input: string) {
 	return input
 		.replace(/([a-z0-9])([A-Z])/g, "$1-$2")
